@@ -1,94 +1,48 @@
-/* Hard performance pass for portal transitions.
-   Keep the glass styling at rest, but never animate layout and backdrop blur
-   at the same time. The opened portal is taken out of document flow. */
+/* Stable portal transition: no document reflow and no spring animation. */
 
-/* 1. Opening a social card must not reflow the five-row stack. */
-.links {
-  position: relative;
-}
+.links { position: relative; }
+.link-row { position: relative; min-height: 58px; }
 
-.link-row {
-  position: relative;
-}
+/* Keep every row in the stack. The opened card visually expands over its own
+   reserved row instead of pushing or covering the rows below it. */
+.portal-shell { position: relative !important; width: 100%; height: 58px !important; transform-origin: center; }
+.portal-shell.armed { position: relative !important; top: auto; left: auto; width: 100%; height: 208px !important; z-index: 50; }
+.portal-shell.armed .portal-card { height: 208px !important; }
 
-.portal-shell.armed {
-  position: absolute !important;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 208px !important;
-  z-index: 50;
-}
+/* The player changes between expanded/collapsed states without an animated
+   height/padding layout pass. */
+.player { transition: none !important; }
+.player-expanded { transition: opacity .16s ease, transform .24s ease !important; }
+.player-collapsed { transition: opacity .14s ease, transform .24s ease !important; }
 
-.portal-shell.armed .portal-card {
-  height: 208px !important;
-}
-
-/* 2. Do not animate the player's height/padding. The expensive layout jump
-   happens once; the visible contents still transition with transform/opacity. */
-.player {
-  transition: none !important;
-}
-
-.player-expanded {
-  transition: opacity .16s ease, transform .26s cubic-bezier(.22,1,.36,1) !important;
-}
-
-.player-collapsed {
-  transition: opacity .14s ease, transform .26s cubic-bezier(.22,1,.36,1) !important;
-}
-
-/* 3. Never run a large backdrop-filter while the portal state is changing.
-   The active portal keeps a small local blur; everything behind it is flat. */
+/* Flatten the large blurred surfaces while a portal is open. */
 .portal-open-page .player,
 .portal-open-page .footer,
 .portal-open-page .link-row:not(:has(.portal-shell.armed)) .portal-card {
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
 }
-
 .portal-open-page .player {
   background: linear-gradient(135deg, rgba(255,255,255,.075), rgba(255,255,255,.016) 48%, rgba(70,8,13,.11));
   contain: layout paint;
 }
-
 .portal-shell.armed .portal-card {
-  -webkit-backdrop-filter: blur(10px) saturate(106%) !important;
-  backdrop-filter: blur(10px) saturate(106%) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(104%) !important;
+  backdrop-filter: blur(8px) saturate(104%) !important;
 }
 
-/* 4. The shell itself only gets a compositor layer while it is moving. */
-.player,
-.portal-shell,
-.portal-card {
-  will-change: auto;
-}
+/* CSS transform only. No Framer Motion spring on the glass card. */
+.portal-shell { will-change: auto; }
+.portal-shell.armed .portal-card { will-change: transform; }
 
-.portal-shell.armed,
-.portal-shell.armed .portal-card {
-  will-change: transform;
-}
-
-/* 5. Keep decorative filters out of the transition path. */
 .portal-open-page .player::after,
 .portal-open-page .visual-aura {
   filter: none !important;
-  opacity: .22;
+  opacity: .2;
 }
 
-/* The expanded card is already absolutely positioned; don't animate its
-   geometry. Opacity is cheap and avoids layout work. */
-.portal-shell.armed .portal-open {
-  transition: opacity .18s ease !important;
-}
+.portal-shell.armed .portal-open { transition: opacity .14s ease !important; }
 
 @media (prefers-reduced-motion: reduce) {
-  .player,
-  .player-expanded,
-  .player-collapsed,
-  .portal-shell,
-  .portal-card,
-  .portal-open {
-    transition: none !important;
-  }
+  .player, .player-expanded, .player-collapsed, .portal-shell, .portal-card, .portal-open { transition: none !important; }
 }
