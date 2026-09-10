@@ -23,16 +23,15 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Build Vite app
         run: npm run build
@@ -46,14 +45,13 @@ jobs:
             echo 'ERROR: source entry leaked into production build'
             exit 1
           fi
-          echo 'Production output verified:'
-          cat dist/index.html
+          echo 'Production output verified.'
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
 
