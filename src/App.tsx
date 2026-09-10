@@ -2,17 +2,19 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import "./App.css";
 
-const REF_BASE = "https://raw.githubusercontent.com/b-1-o/refs/main";
-const MAIN_BG = `${REF_BASE}/2026-09-09_21-41.png`;
+const ASSET_BASE = "https://raw.githubusercontent.com/b-1-o/Bio/main/assets";
+const MUSIC_BASE = "https://raw.githubusercontent.com/b-1-o/Bio/main/music";
+const MAIN_BG = `${ASSET_BASE}/2026-09-09_21-41.png`;
 const KNOWN_OLD_IMAGES = new Set(["2026-09-09_21-41.png", "angel.png", "content.gif", "eyes.png", "fallen.jpg", "fogtree.jpg", "trees.jpeg", "vamp.webp", "akak.jpg", "face.jpg", "heck.jpg", "uau.jpg"]);
-const TRACKS = [`${REF_BASE}/Jane!.mp3`, `${REF_BASE}/Pantyhose.mp3`, `${REF_BASE}/Cigarettes out the Window.mp3`, `${REF_BASE}/Televisions.mp3`, `${REF_BASE}/It Almost Worked.mp3`, `${REF_BASE}/Crystal Castles - Vanished.mp3`, `${REF_BASE}/Type O Negative - I Don't Wanna Be Me.mp3`, `${REF_BASE}/DᐳEᐳAᐳTᐳHᐳMᐳEᐳTᐳAᐳL.mp3`];
+const TRACK_FILES = ["Jane!.mp3", "Pantyhose.mp3", "Cigarettes out the Window.mp3", "Televisions.mp3", "It Almost Worked.mp3", "Crystal Castles - Vanished.mp3", "Type O Negative - I Don't Wanna Be Me.mp3", "DᐳEᐳAᐳTᐳHᐳMᐳEᐳTᐳAᐳL.mp3"];
+const TRACKS = TRACK_FILES.map(file => `${MUSIC_BASE}/${encodeURIComponent(file)}`);
 const TRACK_NAMES = ["Jane!", "Pantyhose", "Cigarettes out the Window", "Televisions", "It Almost Worked", "Vanished", "I Don't Wanna Be Me", "DᐳEᐳAᐳTᐳHᐳMᐳEᐳTᐳAᐳL"];
 const LINKS = [
-  { label: "TikTok", username: "@psycho_b1o", href: "https://www.tiktok.com/@psycho_b1o", glyph: "♪", image: `${REF_BASE}/vamp.webp` },
-  { label: "Instagram", username: "@__._saint", href: "https://www.instagram.com/__._saint", glyph: "◎", image: `${REF_BASE}/akak.jpg` },
-  { label: "Music", username: "@blood_on_music", href: "https://t.me/blood_on_music", glyph: "◈", image: `${REF_BASE}/face.jpg` },
-  { label: "Discord", username: "psycho_b1o", href: "https://discord.gg/P9aqyGCSG", glyph: "◌", image: `${REF_BASE}/heck.jpg` },
-  { label: "GitHub", username: "b-1-o", href: "https://github.com/b-1-o", glyph: "⌘", image: `${REF_BASE}/uau.jpg` },
+  { label: "TikTok", username: "@psycho_b1o", href: "https://www.tiktok.com/@psycho_b1o", glyph: "♪", image: `${ASSET_BASE}/vamp.webp` },
+  { label: "Instagram", username: "@__._saint", href: "https://www.instagram.com/__._saint", glyph: "◎", image: `${ASSET_BASE}/akak.jpg` },
+  { label: "Music", username: "@blood_on_music", href: "https://t.me/blood_on_music", glyph: "◈", image: `${ASSET_BASE}/face.jpg` },
+  { label: "Discord", username: "psycho_b1o", href: "https://discord.gg/P9aqyGCSG", glyph: "◌", image: `${ASSET_BASE}/heck.jpg` },
+  { label: "GitHub", username: "b-1-o", href: "https://github.com/b-1-o", glyph: "⌘", image: `${ASSET_BASE}/uau.jpg` },
 ];
 
 function PlayIcon({ playing }: { playing: boolean }) {
@@ -113,9 +115,9 @@ export default function App() {
     let alive = true;
     const cached = sessionStorage.getItem("b1o-track-backgrounds");
     if (cached) { try { setPlayerBackgrounds(JSON.parse(cached)); return () => { alive = false; }; } catch { sessionStorage.removeItem("b1o-track-backgrounds"); } }
-    fetch("https://api.github.com/repos/b-1-o/refs/contents", { headers: { Accept: "application/vnd.github+json" } }).then(r => r.ok ? r.json() : []).then((items: Array<{ name: string; type: string }>) => {
+    fetch("https://api.github.com/repos/b-1-o/Bio/contents/assets", { headers: { Accept: "application/vnd.github+json" } }).then(r => r.ok ? r.json() : []).then((items: Array<{ name: string; type: string }>) => {
       if (!alive) return;
-      const backgrounds = items.filter(x => x.type === "file" && /\.(png|jpe?g|webp)$/i.test(x.name) && !KNOWN_OLD_IMAGES.has(x.name)).map(x => `${REF_BASE}/${encodeURIComponent(x.name).replace(/%2F/g, "/")}`);
+      const backgrounds = items.filter(x => x.type === "file" && /\.(png|jpe?g|webp)$/i.test(x.name) && !KNOWN_OLD_IMAGES.has(x.name)).map(x => `${ASSET_BASE}/${encodeURIComponent(x.name).replace(/%2F/g, "/")}`);
       setPlayerBackgrounds(backgrounds); try { sessionStorage.setItem("b1o-track-backgrounds", JSON.stringify(backgrounds)); } catch { /* storage unavailable */ }
     }).catch(() => {});
     return () => { alive = false; };
