@@ -1,21 +1,35 @@
-/* Stable portal transition: no document reflow and no spring animation. */
+/* Stable portal transition: keep the row in normal flow, rotate the shell
+   with a cheap CSS transform, and never use a JS spring on the glass surface. */
 
 .links { position: relative; }
 .link-row { position: relative; min-height: 58px; }
 
-/* Keep every row in the stack. The opened card visually expands over its own
-   reserved row instead of pushing or covering the rows below it. */
-.portal-shell { position: relative !important; width: 100%; height: 58px !important; transform-origin: center; }
-.portal-shell.armed { position: relative !important; top: auto; left: auto; width: 100%; height: 208px !important; z-index: 50; }
+.portal-shell {
+  position: relative !important;
+  width: 100%;
+  height: 58px !important;
+  transform-origin: center;
+  transform: rotate(0deg);
+  transition: transform .42s cubic-bezier(.22,1,.36,1), height .42s cubic-bezier(.22,1,.36,1) !important;
+}
+.portal-shell.armed {
+  position: relative !important;
+  top: auto;
+  left: auto;
+  width: 100%;
+  height: 208px !important;
+  z-index: 50;
+  transform: rotate(180deg);
+}
 .portal-shell.armed .portal-card { height: 208px !important; }
 
-/* The player changes between expanded/collapsed states without an animated
-   height/padding layout pass. */
+/* The expanded/collapsed player itself changes instantly; only its contents
+   fade/scale, avoiding an expensive animated layout pass. */
 .player { transition: none !important; }
 .player-expanded { transition: opacity .16s ease, transform .24s ease !important; }
 .player-collapsed { transition: opacity .14s ease, transform .24s ease !important; }
 
-/* Flatten the large blurred surfaces while a portal is open. */
+/* Flatten large background glass surfaces while the portal is open. */
 .portal-open-page .player,
 .portal-open-page .footer,
 .portal-open-page .link-row:not(:has(.portal-shell.armed)) .portal-card {
@@ -29,19 +43,21 @@
 .portal-shell.armed .portal-card {
   -webkit-backdrop-filter: blur(8px) saturate(104%) !important;
   backdrop-filter: blur(8px) saturate(104%) !important;
+  will-change: transform;
 }
 
-/* CSS transform only. No Framer Motion spring on the glass card. */
-.portal-shell { will-change: auto; }
-.portal-shell.armed .portal-card { will-change: transform; }
+/* The inner open face is already flipped in the markup. Since the shell is
+   now the element doing the 180deg turn, the open face must be flipped back
+   to remain readable. */
+.portal-open { transform: rotate(180deg); }
+.portal-shell.armed .portal-open { transform: rotate(180deg); }
+.portal-shell.armed .portal-face { opacity: 0; }
 
 .portal-open-page .player::after,
 .portal-open-page .visual-aura {
   filter: none !important;
   opacity: .2;
 }
-
-.portal-shell.armed .portal-open { transition: opacity .14s ease !important; }
 
 @media (prefers-reduced-motion: reduce) {
   .player, .player-expanded, .player-collapsed, .portal-shell, .portal-card, .portal-open { transition: none !important; }
