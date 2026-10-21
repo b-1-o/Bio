@@ -5,6 +5,7 @@ import { MathUtils } from 'three'
 import type { Group } from 'three'
 import { Model } from './Model'
 import { useScrollProgress } from './useScrollProgress'
+import { PostFX } from './PostFX'
 
 const BASE = import.meta.env.BASE_URL
 
@@ -178,6 +179,7 @@ export function Scene() {
     >
       <Suspense fallback={null}>
         <SceneContent />
+        <PostFX />
       </Suspense>
     </Canvas>
   )
