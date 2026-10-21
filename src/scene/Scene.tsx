@@ -1,5 +1,5 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
-import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Box3, MathUtils, Vector3, Group, type Object3D } from 'three'
 import { useGLTF } from '@react-three/drei'
 import { Model } from './Model'
@@ -125,9 +125,10 @@ function CameraRig({
   const { scene: forestSource } = useGLTF(BASE + 'assets/forest.glb')
   const measured = useMemo(() => measureForest(forestSource), [forestSource])
   const EYE = measured.eye
+  const initialHome = useMemo(() => homeKeys(EYE, measured.size)[0], [EYE, measured.size])
   const lastScrolled = useRef(false)
-  const pos = useMemo(() => new Vector3(-5.4, EYE, 3.4), [EYE])
-  const look = useMemo(() => new Vector3(-0.8, EYE, -1.0), [EYE])
+  const pos = useMemo(() => new Vector3(initialHome.pos[0], initialHome.pos[1], initialHome.pos[2]), [initialHome])
+  const look = useMemo(() => new Vector3(initialHome.look[0], initialHome.look[1], initialHome.look[2]), [initialHome])
   const crashPos = useMemo(() => new Vector3(0, 1.1, 2.4), [])
   const crashLook = useMemo(() => new Vector3(0, 0.4, 1.0), [])
   const crashT = useRef(0)
