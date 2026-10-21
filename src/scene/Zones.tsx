@@ -27,7 +27,7 @@ class ForestAssetBoundary extends Component<
 
   componentDidCatch(error: Error) {
     console.warn(
-      'Original forest.glb is unavailable; falling back to the repository forest_web.glb.',
+      'Original assets/forest.glb is missing; skipping it rather than substituting the compressed forest_web.glb.',
       error.message,
     )
   }
@@ -39,9 +39,7 @@ class ForestAssetBoundary extends Component<
 
 function ForestGround() {
   return (
-    <ForestAssetBoundary
-      fallback={<Model path={BASE + 'assets/forest_web.glb'} />}
-    >
+    <ForestAssetBoundary fallback={null}>
       <Suspense fallback={null}>
         <Model path={BASE + 'assets/forest.glb'} />
       </Suspense>
@@ -49,7 +47,7 @@ function ForestGround() {
   )
 }
 
-function ChurchApproachZone() {
+function OpeningForestZone() {
   return (
     <group>
       <ForestGround />
@@ -279,7 +277,7 @@ export function Zones(props: ZonesProps) {
         position={[-4, 7, 5]}
       />
 
-      <ChurchApproachZone />
+      <OpeningForestZone />
 
       <DeadTreeSocialZone />
 
