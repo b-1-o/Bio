@@ -121,7 +121,10 @@ function CameraRig({
   onScrollStateChange,
   onPlayerOpenChange,
 }: SceneProps) {
-  const { camera, gl } = useThree()\n  const { scene: forestSource } = useGLTF(BASE + 'assets/forest.glb')\n  const measured = useMemo(() => measureForest(forestSource), [forestSource])\n  const EYE = measured.eye
+  const { camera, gl } = useThree()
+  const { scene: forestSource } = useGLTF(BASE + 'assets/forest.glb')
+  const measured = useMemo(() => measureForest(forestSource), [forestSource])
+  const EYE = measured.eye
   const lastScrolled = useRef(false)
   const pos = useMemo(() => new Vector3(-5.4, EYE, 3.4), [EYE])
   const look = useMemo(() => new Vector3(-0.8, EYE, -1.0), [EYE])
