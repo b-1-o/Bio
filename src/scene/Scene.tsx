@@ -1,6 +1,7 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
-import { MathUtils, Vector3, Group } from 'three'
+import { Box3, MathUtils, Vector3, Group, type Object3D } from 'three'
+import { useGLTF } from '@react-three/drei'
 import { Model } from './Model'
 import { SocialLinks } from './SocialLinks'
 import { PostFX } from './PostFX'
@@ -24,7 +25,24 @@ type SceneProps = {
  * 0.84–1.00  PLAYER   stone on the ground
  */
 
-const EYE = 2.55  // eye-level relative to forest scale=2
+// Measure the actual forest asset once (useGLTF caches the source). Model.tsx grounds its clone;
+ // this helper applies the same grounding offset before deriving a human eye height.
+function measureForest(scene: Object3D) {
+  const bounds = new Box3().setFromObject(scene)
+  if (bounds.isEmpty()) return { eye: 1.25, min: new Vector3(-5, 0, -5), size: new Vector3(10, 9, 10) }
+  const min = bounds.min.clone()
+  const size = bounds.getSize(new Vector3())
+  // forest.glb is rendered at scale 2. A person’s eye line is estimated from the
+  // measured environment height; all HOME keyframes then share this exact Y.
+  const scale = 2
+  const groundedHeight = size.y * scale
+  const eye = Math.max(0.8, Math.min(3.2, groundedHeight * 0.14))
+  return {
+    eye,
+    min: new Vector3(min.x * scale, 0, min.z * scale),
+    size: size.multiplyScalar(scale),
+  }
+}
 
 // HOME: strictly eye-level walk, constant height, looking forward at the church
 const HOME = [
@@ -95,10 +113,10 @@ function CameraRig({
   onScrollStateChange,
   onPlayerOpenChange,
 }: SceneProps) {
-  const { camera, gl } = useThree()
+  const { camera, gl } = useThree()\n  const { scene: forestSource } = useGLTF(BASE + 'assets/forest.glb')\n  const measured = useMemo(() => measureForest(forestSource), [forestSource])\n  const EYE = measured.eye
   const lastScrolled = useRef(false)
-  const pos = useMemo(() => new Vector3(-5.4, EYE, 3.4), [])
-  const look = useMemo(() => new Vector3(-0.8, EYE, -1.0), [])
+  const pos = useMemo(() => new Vector3(-5.4, EYE, 3.4), [EYE])
+  const look = useMemo(() => new Vector3(-0.8, EYE, -1.0), [EYE])
   const crashPos = useMemo(() => new Vector3(0, 1.1, 2.4), [])
   const crashLook = useMemo(() => new Vector3(0, 0.4, 1.0), [])
   const crashT = useRef(0)
@@ -196,7 +214,7 @@ function PhaseModels({
   isPlayerOpen: boolean
   onPlayerOpenChange: (v: boolean) => void
 }) {
-  const homeRef = useRef<Group>(null)
+  const { scene: forestSource } = useGLTF(BASE + 'assets/forest.glb')\n  const homeRef = useRef<Group>(null)
   const treeRef = useRef<Group>(null)
   const stoneVisible = useRef(false)
   const [showStone, setShowStone] = useState(false)
