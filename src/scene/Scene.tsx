@@ -1,4 +1,4 @@
-import { Suspense, useMemo, useRef } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Environment } from '@react-three/drei'
 import { MathUtils, Vector3, type Group } from 'three'
@@ -7,146 +7,180 @@ import { PostFX } from './PostFX'
 import { useScrollProgress } from './useScrollProgress'
 
 const BASE = import.meta.env.BASE_URL
-type Position3 = [number, number, number]
 
-function getRingPositions(count: number, radius: number, y: number): Position3[] {
-  return Array.from({ length: count }, (_, index) => {
-    const angle = (index / count) * Math.PI * 2
-    return [Math.cos(angle) * radius, y, Math.sin(angle) * radius]
-  })
+type ModelPlacement = {
+  id: string
+  position: [number, number, number]
+  scale: number
+  rotation: number
 }
 
-function CameraRig() {
+const treePlacements: ModelPlacement[] = [
+  { id: 'tree-nw', position: [-10, -1.1, -9], scale: 2, rotation: 0.42 },
+  { id: 'tree-ne', position: [10, -1.1, -9], scale: 2, rotation: -0.36 },
+  { id: 'tree-west', position: [-12, -1.1, 0], scale: 2.1, rotation: 0.15 },
+  { id: 'tree-east', position: [12, -1.1, 1], scale: 2, rotation: -0.22 },
+  { id: 'tree-sw', position: [-9, -1.1, 9], scale: 1.9, rotation: -0.2 },
+  { id: 'tree-se', position: [9, -1.1, 9], scale: 2.1, rotation: 0.31 },
+]
+
+const rockPlacements: ModelPlacement[] = [
+  { id: 'rock-1', position: [5.1, -1.02, 0.8], scale: 0.72, rotation: 0.4 },
+  { id: 'rock-2', position: [3.6, -1.02, 4.2], scale: 0.62, rotation: 1.2 },
+  { id: 'rock-3', position: [-3.8, -1.02, 3.8], scale: 0.7, rotation: -0.65 },
+  { id: 'rock-4', position: [-5.3, -1.02, -0.6], scale: 0.76, rotation: 0.8 },
+  { id: 'rock-5', position: [-2.3, -1.02, -5.1], scale: 0.62, rotation: 2.1 },
+  { id: 'rock-6', position: [4.3, -1.02, -4.1], scale: 0.68, rotation: -1.05 },
+]
+
+type SceneProps = {
+  isPlayerOpen: boolean
+  onPlayerOpenChange: (open: boolean) => void
+}
+
+function CameraRig({ isPlayerOpen }: { isPlayerOpen: boolean }) {
   const progress = useScrollProgress()
   const { camera } = useThree()
-  const lookTarget = useMemo(() => new Vector3(0, 0.45, 0), [])
+  const lookAt = useMemo(() => new Vector3(0, 0.25, 0), [])
 
   useFrame((_, delta) => {
     const p = progress.current
-    const arc = Math.sin(p * Math.PI)
-    const targetX = MathUtils.lerp(0, 4, p) + arc * 1.1
-    const targetY = MathUtils.lerp(2.5, 1.5, p) + arc * 0.65
-    const targetZ = MathUtils.lerp(8, 1, p)
+    const parallaxX = Math.sin(p * Math.PI * 1.4) * 0.55
+    const targetX = isPlayerOpen ? 0 : parallaxX
+    const targetY = isPlayerOpen ? 2.2 : 4.7 - p * 0.4
+    const targetZ = isPlayerOpen ? 6.2 : 16 - p * 1.3
 
-    camera.position.x = MathUtils.damp(camera.position.x, targetX, 2.2, delta)
-    camera.position.y = MathUtils.damp(camera.position.y, targetY, 2.2, delta)
-    camera.position.z = MathUtils.damp(camera.position.z, targetZ, 2.2, delta)
-    camera.lookAt(lookTarget)
+    camera.position.x = MathUtils.damp(camera.position.x, targetX, 1.9, delta)
+    camera.position.y = MathUtils.damp(camera.position.y, targetY, 1.9, delta)
+    camera.position.z = MathUtils.damp(camera.position.z, targetZ, 1.9, delta)
+    camera.lookAt(lookAt)
   })
 
   return null
 }
 
-function RotatingMonolith() {
-  const group = useRef<Group>(null)
+function CentralStone({
+  isPlayerOpen,
+  onPlayerOpenChange,
+}: Pick<SceneProps, 'isPlayerOpen' | 'onPlayerOpenChange'>) {
+  const spin = useRef<Group>(null)
+  const [hovered, setHovered] = useState(false)
+
+  useEffect(() => {
+    return () => {
+      document.body.style.cursor = 'default'
+    }
+  }, [])
 
   useFrame((_, delta) => {
-    if (group.current) group.current.rotation.y += delta * 0.1
+    if (spin.current && !isPlayerOpen) {
+      spin.current.rotation.y += delta * 0.075
+    }
   })
 
+  const openPlayer = (event: { stopPropagation: () => void }) => {
+    event.stopPropagation()
+    onPlayerOpenChange(!isPlayerOpen)
+  }
+
+  const hoverStone = (event: { stopPropagation: () => void }) => {
+    event.stopPropagation()
+    setHovered(true)
+    document.body.style.cursor = 'pointer'
+  }
+
+  const leaveStone = (event: { stopPropagation: () => void }) => {
+    event.stopPropagation()
+    setHovered(false)
+    document.body.style.cursor = 'default'
+  }
+
   return (
-    <group ref={group} position={[0, 1, 0]} scale={3}>
-      <Model path={`${BASE}assets/stone_opt.glb`} />
+    <group
+      position={[0, 0, 0]}
+      onClick={openPlayer}
+      onPointerOver={hoverStone}
+      onPointerOut={leaveStone}
+    >
+      <pointLight
+        color="#6a8fc0"
+        intensity={hovered ? 1.7 : 0.15}
+        distance={hovered ? 5 : 2.2}
+        decay={2}
+        position={[0, 0.55, 0]}
+      />
+      <mesh position={[0, 0.35, 0]}>
+        <sphereGeometry args={[1.35, 24, 20]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
+      <group ref={spin} scale={2}>
+        <Model path={`${BASE}assets/stone_opt.glb`} highlight={hovered} />
+      </group>
     </group>
   )
 }
 
-function ModelRing({
-  count,
-  radius,
-  y,
-  scale,
-  path,
-}: {
-  count: number
-  radius: number
-  y: number
-  scale: number
-  path: string
-}) {
-  const positions = useMemo(
-    () => getRingPositions(count, radius, y),
-    [count, radius, y],
-  )
-
-  return (
-    <>
-      {positions.map((position, index) => (
-        <group key={index} position={position} scale={scale}>
-          <Model path={path} />
-        </group>
-      ))}
-    </>
-  )
-}
-
-function SceneContent() {
+function SceneContent(props: SceneProps) {
   return (
     <>
       <color attach="background" args={['#050505']} />
-      <fogExp2 attach="fog" args={['#050505', 0.06]} />
+      <fogExp2 attach="fog" args={['#050505', 0.05]} />
 
       <Environment
         files={`${BASE}assets/dark_autumn_forest_1k.hdr`}
         background={false}
-        environmentIntensity={0.4}
+        environmentIntensity={0.32}
       />
 
+      <ambientLight color="#202a3a" intensity={0.48} />
       <directionalLight
         color="#6a8fc0"
-        intensity={2}
-        position={[5, 10, 5]}
+        intensity={2.1}
+        position={[4, 11, 5]}
       />
-      <pointLight
-        color="#ff9a55"
-        intensity={3}
-        distance={15}
-        position={[0, 2, -8]}
-        decay={2}
+      <directionalLight
+        color="#26364e"
+        intensity={0.7}
+        position={[-8, 5, -5]}
       />
 
-      <mesh
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, -0.5, 0]}
-        receiveShadow
-      >
-        <planeGeometry args={[100, 100]} />
-        <meshStandardMaterial color="#0a0a0a" roughness={0.9} />
-      </mesh>
+      <group position={[0, -1, 0]} scale={3}>
+        <Model path={`${BASE}assets/forest_web.glb`} />
+      </group>
 
-      <RotatingMonolith />
-      <ModelRing
-        count={8}
-        radius={4}
-        y={-0.2}
-        scale={1}
-        path={`${BASE}assets/rocks_web.glb`}
-      />
-      <ModelRing
-        count={6}
-        radius={7}
-        y={-0.3}
-        scale={2}
-        path={`${BASE}assets/tree_web.glb`}
-      />
-      <ModelRing
-        count={5}
-        radius={14}
-        y={-1}
-        scale={5}
-        path={`${BASE}assets/forest_web.glb`}
-      />
+      {treePlacements.map((tree) => (
+        <group
+          key={tree.id}
+          position={tree.position}
+          scale={tree.scale}
+          rotation={[0, tree.rotation, 0]}
+        >
+          <Model path={`${BASE}assets/tree_web.glb`} />
+        </group>
+      ))}
 
-      <CameraRig />
+      {rockPlacements.map((rock) => (
+        <group
+          key={rock.id}
+          position={rock.position}
+          scale={rock.scale}
+          rotation={[0, rock.rotation, 0]}
+        >
+          <Model path={`${BASE}assets/rocks_web.glb`} />
+        </group>
+      ))}
+
+      <CentralStone {...props} />
+      <CameraRig isPlayerOpen={props.isPlayerOpen} />
       <PostFX />
     </>
   )
 }
 
-export function Scene() {
+export function Scene(props: SceneProps) {
   return (
     <Canvas
-      camera={{ position: [0, 2.5, 8], fov: 50, near: 0.1, far: 100 }}
+      camera={{ position: [0, 4.7, 16], fov: 48, near: 0.1, far: 150 }}
       dpr={[1, 1.5]}
       frameloop="always"
       gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
@@ -156,11 +190,12 @@ export function Scene() {
         width: '100%',
         height: '100%',
         zIndex: 0,
-        pointerEvents: 'none',
+        pointerEvents: 'auto',
+        touchAction: 'pan-y',
       }}
     >
       <Suspense fallback={null}>
-        <SceneContent />
+        <SceneContent {...props} />
       </Suspense>
     </Canvas>
   )

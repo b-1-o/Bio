@@ -1,12 +1,12 @@
 :root {
   color-scheme: dark;
-  background: #050505;
-  color: #e6e8eb;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background: #05070b;
+  color: #e7edf6;
 }
 
 * {
@@ -20,70 +20,73 @@ body,
   min-width: 100%;
   min-height: 100%;
   margin: 0;
-  background: #050505;
+  background: #05070b;
 }
 
 body {
   overflow-x: hidden;
 }
 
+button {
+  font: inherit;
+}
+
 .app {
   position: relative;
   width: 100%;
-  height: 300vh;
-  min-height: 300vh;
-  background: #050505;
+  height: 200vh;
+  min-height: 100vh;
+  overflow: clip;
+  isolation: isolate;
+  background: #05070b;
 }
 
-.overlay {
+.scene-wordmark {
   position: fixed;
+  z-index: 3;
   inset: 0;
-  z-index: 10;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: 11vh 24px 7vh;
+  padding: clamp(28px, 7vh, 76px) 20px clamp(24px, 5vh, 48px);
   pointer-events: none;
   user-select: none;
 }
 
-.hero-title {
-  margin: 0;
-  color: #e6e8eb;
+.scene-wordmark__name {
+  color: rgba(225, 234, 246, 0.9);
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(2.5rem, 7vw, 5rem);
+  font-size: clamp(2rem, 5vw, 4rem);
   font-weight: 400;
-  letter-spacing: 0.19em;
+  letter-spacing: 0.22em;
   line-height: 1;
-  text-indent: 0.19em;
-  text-shadow: 0 0 42px rgba(106, 143, 192, 0.13);
+  text-indent: 0.22em;
+  text-shadow: 0 0 36px rgba(91, 127, 178, 0.23);
 }
 
-.scroll-hint {
-  margin: 0;
-  color: rgba(207, 215, 224, 0.62);
+.scene-wordmark__hint {
+  color: rgba(192, 207, 226, 0.57);
   font-size: 0.65rem;
-  font-weight: 400;
-  letter-spacing: 0.28em;
-  line-height: 1.5;
+  font-weight: 500;
+  letter-spacing: 0.24em;
   text-align: center;
   text-transform: uppercase;
 }
 
-@media (max-width: 640px) {
-  .overlay {
-    padding: 10vh 16px 6vh;
+@media (max-width: 600px) {
+  .scene-wordmark {
+    padding: 8vh 18px 4vh;
   }
 
-  .hero-title {
-    letter-spacing: 0.14em;
-    text-indent: 0.14em;
+  .scene-wordmark__name {
+    letter-spacing: 0.16em;
+    text-indent: 0.16em;
   }
 
-  .scroll-hint {
-    font-size: 0.6rem;
-    letter-spacing: 0.2em;
+  .scene-wordmark__hint {
+    font-size: 0.58rem;
+    letter-spacing: 0.17em;
   }
 }
 
@@ -91,6 +94,7 @@ body {
   *,
   *::before,
   *::after {
-    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }

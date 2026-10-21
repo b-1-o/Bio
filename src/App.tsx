@@ -1,14 +1,28 @@
+import { useState } from 'react'
 import { Scene } from './scene/Scene'
+import { PlayerUI } from './ui/PlayerUI'
 import './App.css'
 
 export default function App() {
+  const [isPlayerOpen, setIsPlayerOpen] = useState(false)
+
   return (
-    <div className="app">
-      <Scene />
-      <div className="overlay">
-        <h1 className="hero-title">b-1-o</h1>
-        <p className="scroll-hint">Scroll to explore</p>
+    <main className="app">
+      <Scene
+        isPlayerOpen={isPlayerOpen}
+        onPlayerOpenChange={setIsPlayerOpen}
+      />
+
+      <div className="scene-wordmark" aria-hidden="true">
+        <span className="scene-wordmark__name">b-1-o</span>
+        {!isPlayerOpen && (
+          <span className="scene-wordmark__hint">Click the stone to listen</span>
+        )}
       </div>
-    </div>
+
+      {isPlayerOpen && (
+        <PlayerUI onClose={() => setIsPlayerOpen(false)} />
+      )}
+    </main>
   )
 }
