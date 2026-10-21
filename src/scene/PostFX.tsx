@@ -2,7 +2,6 @@ import {
   EffectComposer,
   Bloom,
   Vignette,
-  ChromaticAberration,
   Noise,
 } from '@react-three/postprocessing'
 import { BlendFunction } from 'postprocessing'
@@ -11,19 +10,14 @@ export function PostFX() {
   return (
     <EffectComposer multisampling={4}>
       <Bloom
-        intensity={1.5}
-        luminanceThreshold={0.2}
-        luminanceSmoothing={0.4}
+        intensity={0.5}
+        luminanceThreshold={0.8}
+        luminanceSmoothing={0.35}
         mipmapBlur
         blendFunction={BlendFunction.ADD}
       />
-      <Vignette offset={0.3} darkness={0.85} eskil={false} />
-      <ChromaticAberration
-        offset={[0.001, 0.001]}
-        radialModulation
-        modulationOffset={0.2}
-      />
-      <Noise opacity={0.05} blendFunction={BlendFunction.OVERLAY} />
+      <Vignette offset={0.28} darkness={0.9} eskil={false} />
+      <Noise opacity={0.03} blendFunction={BlendFunction.OVERLAY} />
     </EffectComposer>
   )
 }
