@@ -52,7 +52,7 @@ export function SocialLinks() {
           <mesh position={link.position}>
             <sphereGeometry args={[0.18, 24, 24]} />
             <meshStandardMaterial
-              color="#333"
+              color="#222"
               roughness={0.42}
               metalness={0.08}
             />

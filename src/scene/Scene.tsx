@@ -140,7 +140,7 @@ function World(props: SceneProps) {
       <ambientLight intensity={0.1} color="#888" />
       <directionalLight
         intensity={1.5}
-        color="#aaaaaa"
+        color="#888"
         position={[5, 10, 5]}
         castShadow
       />
