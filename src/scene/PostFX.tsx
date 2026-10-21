@@ -11,19 +11,19 @@ export function PostFX() {
   return (
     <EffectComposer multisampling={4}>
       <Bloom
-        intensity={0.7}
-        luminanceThreshold={0.55}
-        luminanceSmoothing={0.3}
+        intensity={1.5}
+        luminanceThreshold={0.2}
+        luminanceSmoothing={0.4}
         mipmapBlur
         blendFunction={BlendFunction.ADD}
       />
-      <Vignette offset={0.25} darkness={0.75} eskil={false} />
+      <Vignette offset={0.3} darkness={0.85} eskil={false} />
       <ChromaticAberration
-        offset={[0.0008, 0.0008]}
+        offset={[0.001, 0.001]}
         radialModulation
-        modulationOffset={0.15}
+        modulationOffset={0.2}
       />
-      <Noise opacity={0.04} blendFunction={BlendFunction.OVERLAY} />
+      <Noise opacity={0.05} blendFunction={BlendFunction.OVERLAY} />
     </EffectComposer>
   )
 }
