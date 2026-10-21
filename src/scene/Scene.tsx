@@ -26,6 +26,8 @@ type AssetMetrics = {
   center: Vector3
   eye?: number
   churchTarget?: Vector3
+  houseTarget?: Vector3
+  houseSize?: Vector3
 }
 
 type Routes = {
@@ -69,6 +71,9 @@ function measureAsset(scene: Object3D, scale: number): AssetMetrics {
   )
 
   let namedHouseHeight = 0
+  let houseVolume = 0
+  let houseTarget: Vector3 | undefined
+  let houseSize: Vector3 | undefined
   let churchVolume = 0
   let churchTarget: Vector3 | undefined
 
@@ -85,7 +90,14 @@ function measureAsset(scene: Object3D, scale: number): AssetMetrics {
       worldHeight >= 1.2 &&
       worldHeight <= 4.5
     ) {
-      namedHouseHeight = Math.max(namedHouseHeight, worldHeight)
+      const volume = objectSize.x * objectSize.y * objectSize.z
+      if (worldHeight > namedHouseHeight || volume > houseVolume) {
+        namedHouseHeight = Math.max(namedHouseHeight, worldHeight)
+        houseVolume = volume
+        const c = bounds.getCenter(new Vector3())
+        houseTarget = new Vector3(c.x * scale, 0, c.z * scale)
+        houseSize = objectSize.clone().multiplyScalar(scale)
+      }
     }
 
     if (/(church|chapel|cathedral|steeple)/i.test(name) && worldHeight < size.y * 0.96) {
@@ -105,7 +117,7 @@ function measureAsset(scene: Object3D, scale: number): AssetMetrics {
     ? MathUtils.clamp(namedHouseHeight * 0.60, 1.15, 1.85)
     : MathUtils.clamp(size.y * 0.16, 1.25, 1.65)
 
-  return { min, max, size, center, eye, churchTarget }
+  return { min, max, size, center, eye, churchTarget, houseTarget, houseSize }
 }
 
 function homeKeys(forest: AssetMetrics, eye: number): Key[] {
@@ -116,11 +128,21 @@ function homeKeys(forest: AssetMetrics, eye: number): Key[] {
     0,
     forest.min.z + forest.size.z * 0.43,
   )
+  // If the GLB has a named house node, derive the opening position from it:
+  // stand just to its front-left, then join the measured front-edge arc.
+  const house = forest.houseTarget
+  const houseSize = forest.houseSize ?? new Vector3(1.4, 2.4, 1.4)
+  const startX = house
+    ? MathUtils.clamp(house.x - houseSize.x * 0.55, forest.min.x + forest.size.x * 0.025, forest.max.x - forest.size.x * 0.025)
+    : x(0.20)
+  const startZ = house
+    ? MathUtils.clamp(house.z + houseSize.z * 0.85, forest.min.z + forest.size.z * 0.66, forest.max.z - forest.size.z * 0.025)
+    : z(0.80)
   // One fixed horizontal sightline for the whole walk: movement changes the
   // viewer's position, never the fact that they are looking toward the church.
   const look: [number, number, number] = [church.x, eye + 0.08, church.z]
   return [
-    { t: 0.00, pos: [x(0.20), eye, z(0.80)], look },
+    { t: 0.00, pos: [startX, eye, startZ], look },
     { t: 0.20, pos: [x(0.29), eye, z(0.85)], look },
     { t: 0.40, pos: [x(0.40), eye, z(0.88)], look },
     { t: 0.60, pos: [x(0.53), eye, z(0.88)], look },
