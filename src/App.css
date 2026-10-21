@@ -34,8 +34,8 @@ button {
 .app {
   position: relative;
   width: 100%;
-  height: 200vh;
-  min-height: 100vh;
+  height: 300vh;
+  min-height: 300vh;
   isolation: isolate;
   background: #030303;
 }
@@ -71,6 +71,7 @@ button {
   letter-spacing: 0.24em;
   text-align: center;
   text-transform: uppercase;
+  transition: opacity 300ms ease;
 }
 
 @media (max-width: 600px) {
