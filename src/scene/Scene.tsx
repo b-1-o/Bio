@@ -1,6 +1,7 @@
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { Canvas, useFrame, type ThreeEvent } from '@react-three/fiber'
 import { Environment } from '@react-three/drei'
+import type { Group } from 'three'
 import { Model } from './Model'
 import { CameraRig } from './CameraRig'
 import { PostFX } from './PostFX'
@@ -39,7 +40,7 @@ type SceneProps = {
 }
 
 function CentralStone({ isPlayerOpen, onPlayerOpenChange }: SceneProps) {
-  const rotationGroup = useRef<THREE.Group>(null)
+  const rotationGroup = useRef<Group>(null)
   const [hovered, setHovered] = useState(false)
 
   useEffect(() => {
