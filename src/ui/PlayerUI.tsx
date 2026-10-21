@@ -89,7 +89,13 @@ export function PlayerUI({ onClose }: PlayerUIProps) {
   }
 
   return (
-    <div className="player-backdrop" role="presentation">
+    <div
+      className="player-backdrop"
+      role="presentation"
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onClose()
+      }}
+    >
       <section
         className="player-panel"
         role="dialog"
