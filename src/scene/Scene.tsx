@@ -114,7 +114,7 @@ function measureAsset(scene: Object3D, scale: number): AssetMetrics {
   // semantic node names, use a conservative human-scale fallback instead of
   // a percentage of the tallest tree/church steeple.
   const eye = namedHouseHeight > 0
-    ? MathUtils.clamp(namedHouseHeight * 0.60, 1.15, 1.85)
+    ? MathUtils.clamp(namedHouseHeight * 0.60, 1.15, 1.65)
     : MathUtils.clamp(size.y * 0.16, 1.25, 1.65)
 
   return { min, max, size, center, eye, churchTarget, houseTarget, houseSize }
