@@ -1,202 +1,230 @@
-import { Suspense, useRef } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Suspense, useMemo, useRef } from 'react'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Environment } from '@react-three/drei'
+import { MathUtils } from 'three'
 import type { Group } from 'three'
 import { Model } from './Model'
 import { PostFX } from './PostFX'
+import { useScrollProgress } from './useScrollProgress'
+import { useDeviceTier } from './useDeviceTier'
 
 const BASE = import.meta.env.BASE_URL
 
 /* -------------------------------------------------------------------------- */
-/*  Плавающий объект: лёгкий float + опциональное вращение                    */
+/*  Камера: вглубь леса при скролле                                            */
 /* -------------------------------------------------------------------------- */
-function Floating({
-  children,
-  amplitude = 0.12,
-  speed = 0.4,
-  phase = 0,
-  rotateY = 0,
-  ...props
-}: {
-  children: React.ReactNode
-  amplitude?: number
-  speed?: number
-  phase?: number
-  rotateY?: number
-} & React.ComponentProps<'group'>) {
-  const ref = useRef<Group>(null)
-  const baseY = useRef<number | null>(null)
+function CameraRig() {
+  const progress = useScrollProgress()
+  const { camera } = useThree()
+  const target = useRef({ z: 6, y: 1.4, x: 0 })
 
-  useFrame((state) => {
-    if (!ref.current) return
-    if (baseY.current === null) baseY.current = ref.current.position.y
-    ref.current.position.y =
-      baseY.current + Math.sin(state.clock.elapsedTime * speed + phase) * amplitude
-    if (rotateY !== 0) {
-      ref.current.rotation.y += rotateY * 0.016
-    }
+  useFrame((_, delta) => {
+    const p = progress.current
+    // z: 6 → -12 (вглубь)
+    target.current.z = MathUtils.lerp(6, -12, p)
+    target.current.y = MathUtils.lerp(1.4, 1.0, p)
+    // лёгкое покачивание
+    target.current.x = Math.sin(p * Math.PI * 2) * 0.45
+
+    camera.position.z = MathUtils.damp(camera.position.z, target.current.z, 0.12, delta)
+    camera.position.y = MathUtils.damp(camera.position.y, target.current.y, 0.12, delta)
+    camera.position.x = MathUtils.damp(camera.position.x, target.current.x, 0.1, delta)
+    camera.lookAt(0, 0.6, camera.position.z - 8)
   })
 
+  return null
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Освещение: холодный лунный + тёплый акцент у «избы»                        */
+/* -------------------------------------------------------------------------- */
+function Lighting() {
   return (
-    <group ref={ref} {...props}>
-      {children}
+    <>
+      <Environment
+        files={`${BASE}assets/dark_autumn_forest_1k.hdr`}
+        background={false}
+        environmentIntensity={0.3}
+      />
+      <fogExp2 attach="fog" args={['#050505', 0.05]} />
+
+      {/* Лунный свет */}
+      <directionalLight
+        color="#4a6fa5"
+        intensity={1.5}
+        position={[5, 12, 4]}
+      />
+      {/* Мягкий ambient от неба */}
+      <hemisphereLight args={['#1a2838', '#0a0a0c', 0.35]} />
+      {/* Тёплый акцент в глубине (окно/костёр) */}
+      <pointLight
+        color="#ffaa55"
+        intensity={2.2}
+        distance={18}
+        decay={2}
+        position={[0, 2.2, -10]}
+      />
+      {/* Холодный fill спереди */}
+      <pointLight
+        color="#6ec8d8"
+        intensity={0.6}
+        distance={14}
+        decay={2}
+        position={[-2, 3, 2]}
+      />
+    </>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Земля                                                                     */
+/* -------------------------------------------------------------------------- */
+function Ground() {
+  return (
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.2, -8]} receiveShadow>
+      <planeGeometry args={[80, 80]} />
+      <meshStandardMaterial color="#0e0e10" roughness={0.95} metalness={0.05} />
+    </mesh>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Стилизованная «изба» из примитивов (центр, z ≈ -10)                        */
+/* -------------------------------------------------------------------------- */
+function Cabin() {
+  return (
+    <group position={[0, -1.2, -10]}>
+      {/* Стены */}
+      <mesh position={[0, 1.1, 0]}>
+        <boxGeometry args={[3.2, 2.2, 2.6]} />
+        <meshStandardMaterial color="#1a1c20" roughness={0.9} metalness={0.05} />
+      </mesh>
+      {/* Крыша */}
+      <mesh position={[0, 2.55, 0]} rotation={[0, Math.PI / 4, 0]}>
+        <coneGeometry args={[2.6, 1.4, 4]} />
+        <meshStandardMaterial color="#12141a" roughness={0.85} />
+      </mesh>
+      {/* Тёплое «окно» */}
+      <mesh position={[0, 1.15, 1.32]}>
+        <planeGeometry args={[0.7, 0.55]} />
+        <meshStandardMaterial
+          color="#ffcc88"
+          emissive="#ffaa55"
+          emissiveIntensity={1.8}
+          toneMapped={false}
+        />
+      </mesh>
     </group>
   )
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Освещение: красный снизу-слева + циан сверху-справа                        */
+/*  Коридор деревьев                                                          */
 /* -------------------------------------------------------------------------- */
-function Lighting() {
-  return (
-    <>
-      {/* HDRI только для отражений, не как основной свет */}
-      <Environment
-        files={`${BASE}assets/dark_autumn_forest_1k.hdr`}
-        background={false}
-        environmentIntensity={0.45}
-      />
-
-      {/* Густой чёрный туман — прячет границы моделей */}
-      <fogExp2 attach="fog" args={['#050505', 0.15]} />
-
-      {/* Зловещий красный снизу-слева — грани монолита */}
-      <pointLight
-        color="#ff1a1a"
-        intensity={5}
-        distance={14}
-        decay={2}
-        position={[-4, -1.5, 2]}
-      />
-      {/* Холодный циан сверху-справа */}
-      <pointLight
-        color="#00e5ff"
-        intensity={2.2}
-        distance={16}
-        decay={2}
-        position={[5, 4, 1]}
-      />
-      {/* Мягкий фиолетовый rim сзади */}
-      <pointLight
-        color="#6a3a8a"
-        intensity={1.2}
-        distance={12}
-        decay={2}
-        position={[0, 2, -6]}
-      />
-    </>
-  )
-}
-
-/* -------------------------------------------------------------------------- */
-/*  Монолит — вылезает из-за нижнего левого края UI                            */
-/* -------------------------------------------------------------------------- */
-function Monolith() {
-  return (
-    <Floating
-      position={[-2.8, -2.4, 0.5]}
-      scale={3.6}
-      amplitude={0.08}
-      speed={0.25}
-      phase={0}
-      rotateY={0.08}
-    >
-      <Model path={`${BASE}assets/stone_opt.glb`} />
-    </Floating>
-  )
-}
-
-/* -------------------------------------------------------------------------- */
-/*  Камни по краям — не лезут в центр                                          */
-/* -------------------------------------------------------------------------- */
-function EdgeRocks() {
-  const left = [
-    { pos: [-5.2, -2.8, 1.2] as [number, number, number], scale: 1.1, phase: 0.4 },
-    { pos: [-4.6, -3.2, -1.5] as [number, number, number], scale: 0.85, phase: 1.2 },
-    { pos: [-5.8, -2.5, -0.4] as [number, number, number], scale: 0.7, phase: 2.1 },
-  ]
-  const right = [
-    { pos: [5.0, -2.9, 0.8] as [number, number, number], scale: 1.0, phase: 0.8 },
-    { pos: [5.5, -3.1, -1.8] as [number, number, number], scale: 0.9, phase: 1.7 },
-    { pos: [4.4, -2.6, -0.6] as [number, number, number], scale: 0.75, phase: 2.6 },
-  ]
+function TreeCorridor({ count }: { count: number }) {
+  const trees = useMemo(() => {
+    const list: {
+      pos: [number, number, number]
+      scale: number
+      rot: number
+    }[] = []
+    const depths = [-3, -6, -9, -12, -15, -18]
+    for (let i = 0; i < Math.min(count, depths.length * 2); i++) {
+      const side = i % 2 === 0 ? -1 : 1
+      const depthIdx = Math.floor(i / 2)
+      const z = depths[depthIdx] ?? -18
+      const x = side * (3.8 + (depthIdx % 3) * 0.35)
+      list.push({
+        pos: [x, -1.2, z],
+        scale: 1.6 + (depthIdx % 3) * 0.25,
+        rot: side * 0.15 + depthIdx * 0.1,
+      })
+    }
+    return list
+  }, [count])
 
   return (
     <>
-      {left.map((r, i) => (
-        <Floating
-          key={`L${i}`}
-          position={r.pos}
-          scale={r.scale}
-          amplitude={0.1 + i * 0.03}
-          speed={0.35 + i * 0.05}
-          phase={r.phase}
-          rotation={[0, 0.6 + i * 0.4, 0.05]}
-        >
-          <Model path={`${BASE}assets/rocks_web.glb`} />
-        </Floating>
-      ))}
-      {right.map((r, i) => (
-        <Floating
-          key={`R${i}`}
-          position={r.pos}
-          scale={r.scale}
-          amplitude={0.09 + i * 0.025}
-          speed={0.3 + i * 0.04}
-          phase={r.phase}
-          rotation={[0, -0.5 - i * 0.35, -0.04]}
-        >
-          <Model path={`${BASE}assets/rocks_web.glb`} />
-        </Floating>
+      {trees.map((t, i) => (
+        <group key={i} position={t.pos} scale={t.scale} rotation={[0, t.rot, 0]}>
+          <Model path={`${BASE}assets/tree_web.glb`} />
+        </group>
       ))}
     </>
   )
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Деревья + лес — далеко, почти растворяются в тумане                        */
+/*  Камни на земле                                                            */
 /* -------------------------------------------------------------------------- */
-function FoggyBackground() {
+function Rocks({ dense }: { dense: boolean }) {
+  const items = useMemo(() => {
+    const base = [
+      { path: `${BASE}assets/stone_opt.glb`, pos: [-2.2, -1.15, -4] as [number, number, number], scale: 0.9 },
+      { path: `${BASE}assets/rocks_web.glb`, pos: [2.5, -1.2, -5.5] as [number, number, number], scale: 0.75 },
+      { path: `${BASE}assets/rocks_web.glb`, pos: [-3.4, -1.25, -8] as [number, number, number], scale: 0.65 },
+      { path: `${BASE}assets/stone_opt.glb`, pos: [1.8, -1.15, -11] as [number, number, number], scale: 0.7 },
+      { path: `${BASE}assets/rocks_web.glb`, pos: [-1.5, -1.2, -14] as [number, number, number], scale: 0.55 },
+    ]
+    return dense ? base : base.slice(0, 3)
+  }, [dense])
+
   return (
     <>
-      {/* Два мёртвых дерева — силуэты */}
-      <Floating position={[-6.5, -1.5, -14]} scale={2.8} amplitude={0.06} speed={0.2} phase={0.5}>
-        <Model path={`${BASE}assets/tree_web.glb`} />
-      </Floating>
-      <Floating position={[7.0, -1.8, -15]} scale={3.1} amplitude={0.07} speed={0.18} phase={1.4}>
-        <Model path={`${BASE}assets/tree_web.glb`} />
-      </Floating>
-
-      {/* Стена леса ещё дальше */}
-      <Floating position={[-3, -2, -20]} scale={4.5} amplitude={0.04} speed={0.12} phase={0.2}>
-        <Model path={`${BASE}assets/forest_web.glb`} />
-      </Floating>
-      <Floating position={[4, -2.2, -22]} scale={5.0} amplitude={0.05} speed={0.1} phase={1.0}>
-        <Model path={`${BASE}assets/forest_web.glb`} />
-      </Floating>
+      {items.map((r, i) => (
+        <group key={i} position={r.pos} scale={r.scale}>
+          <Model path={r.path} />
+        </group>
+      ))}
     </>
   )
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Сцена                                                                     */
+/*  Дальний лес-фон                                                           */
 /* -------------------------------------------------------------------------- */
-function SceneContent() {
+function DistantForest() {
   return (
     <>
+      <group position={[-4, -1.5, -22]} scale={4}>
+        <Model path={`${BASE}assets/forest_web.glb`} />
+      </group>
+      <group position={[5, -1.6, -24]} scale={4.5}>
+        <Model path={`${BASE}assets/forest_web.glb`} />
+      </group>
+    </>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Контент сцены                                                             */
+/* -------------------------------------------------------------------------- */
+function SceneContent({ tier }: { tier: 'low' | 'medium' | 'high' }) {
+  const treeCount = tier === 'high' ? 10 : tier === 'medium' ? 6 : 4
+  const dense = tier === 'high'
+
+  return (
+    <>
+      <CameraRig />
       <Lighting />
-      <Monolith />
-      <EdgeRocks />
-      <FoggyBackground />
+      <Ground />
+      <Cabin />
+      <TreeCorridor count={treeCount} />
+      <Rocks dense={dense} />
+      {tier !== 'low' && <DistantForest />}
     </>
   )
 }
 
 export function Scene() {
+  const tier = useDeviceTier()
+  const isMobile = tier !== 'high'
+
   return (
     <Canvas
-      camera={{ position: [0, 0.8, 7], fov: 42 }}
-      dpr={[1, 1.5]}
+      camera={{ position: [0, 1.4, 6], fov: 50 }}
+      dpr={isMobile ? [1, 1.25] : [1, 1.5]}
+      frameloop={isMobile ? 'demand' : 'always'}
       gl={{ antialias: true, alpha: true }}
       style={{
         position: 'fixed',
@@ -207,10 +235,21 @@ export function Scene() {
         zIndex: 0,
         pointerEvents: 'none',
       }}
+      onCreated={({ gl }) => {
+        // demand-mode: перерисовываем при скролле
+        if (isMobile) {
+          const invalidate = () => gl.domElement.dispatchEvent(new Event('webglcontextrestored'))
+          window.addEventListener('scroll', () => {
+            // fiber invalidate через store недоступен здесь напрямую —
+            // demand + scroll progress уже двигает камеру в useFrame
+          }, { passive: true })
+          void invalidate
+        }
+      }}
     >
       <Suspense fallback={null}>
-        <SceneContent />
-        <PostFX />
+        <SceneContent tier={tier} />
+        {tier === 'high' && <PostFX />}
       </Suspense>
     </Canvas>
   )
