@@ -13,10 +13,10 @@ export default function App() {
         onPlayerOpenChange={setIsPlayerOpen}
       />
 
-      <div className="scene-wordmark" aria-hidden="true">
+      <div className="scene-wordmark">
         <span className="scene-wordmark__name">b-1-o</span>
         {!isPlayerOpen && (
-          <span className="scene-wordmark__hint">Click the stone to listen</span>
+          <span className="scene-wordmark__hint">CLICK THE STONE TO LISTEN</span>
         )}
       </div>
 

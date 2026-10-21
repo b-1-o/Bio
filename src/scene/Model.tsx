@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react'
 import { useGLTF } from '@react-three/drei'
 import type { ThreeElements } from '@react-three/fiber'
-import type { Color, Material, Mesh, Object3D } from 'three'
+import { Box3, type Color, type Material, type Mesh, type Object3D } from 'three'
 
 const BASE = import.meta.env.BASE_URL
 
@@ -17,8 +17,14 @@ type EmissiveMaterial = Material & {
   emissiveIntensity?: number
 }
 
-function cloneWithMaterials(scene: Object3D) {
+/**
+ * Clone geometry references but give each instance its own materials.
+ * Translate the clone by its measured local bounding-box minimum so GLBs whose
+ * origin is at their center still rest on the parent group's ground plane.
+ */
+function cloneAndGround(scene: Object3D) {
   const clone = scene.clone(true)
+
   clone.traverse((object) => {
     const mesh = object as Mesh
     if (!mesh.isMesh) return
@@ -26,18 +32,23 @@ function cloneWithMaterials(scene: Object3D) {
       ? mesh.material.map((material) => material.clone())
       : mesh.material.clone()
   })
+
+  clone.updateMatrixWorld(true)
+  const bounds = new Box3().setFromObject(clone)
+  if (!bounds.isEmpty()) clone.position.y -= bounds.min.y
+  clone.updateMatrixWorld(true)
+
   return clone
 }
 
 export function Model({ path, highlight = false, ...props }: ModelProps) {
   const { scene } = useGLTF(path)
-  const clonedScene = useMemo(() => cloneWithMaterials(scene), [scene])
+  const groundedScene = useMemo(() => cloneAndGround(scene), [scene])
 
   useEffect(() => {
-    if (!highlight) return
+    const restorers: Array<() => void> = []
 
-    const restore: Array<() => void> = []
-    clonedScene.traverse((object) => {
+    groundedScene.traverse((object) => {
       const mesh = object as Mesh
       if (!mesh.isMesh) return
 
@@ -48,20 +59,26 @@ export function Model({ path, highlight = false, ...props }: ModelProps) {
 
         const previousColor = emissiveMaterial.emissive.clone()
         const previousIntensity = emissiveMaterial.emissiveIntensity ?? 1
-        emissiveMaterial.emissive.set('#263f68')
-        emissiveMaterial.emissiveIntensity = Math.max(previousIntensity, 0.65)
 
-        restore.push(() => {
+        if (highlight) {
+          emissiveMaterial.emissive.set('#263f68')
+          emissiveMaterial.emissiveIntensity = Math.max(previousIntensity, 0.65)
+        } else {
+          emissiveMaterial.emissive.copy(previousColor)
+          emissiveMaterial.emissiveIntensity = previousIntensity
+        }
+
+        restorers.push(() => {
           emissiveMaterial.emissive?.copy(previousColor)
           emissiveMaterial.emissiveIntensity = previousIntensity
         })
       }
     })
 
-    return () => restore.forEach((restoreMaterial) => restoreMaterial())
-  }, [clonedScene, highlight])
+    return () => restorers.forEach((restore) => restore())
+  }, [groundedScene, highlight])
 
-  return <primitive object={clonedScene} {...props} dispose={null} />
+  return <primitive object={groundedScene} {...props} dispose={null} />
 }
 
 useGLTF.preload(`${BASE}assets/stone_opt.glb`)
