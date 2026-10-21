@@ -1,6 +1,6 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
-import { MathUtils, Vector3 } from 'three'
+import { MathUtils, Vector3, Group } from 'three'
 import { Model } from './Model'
 import { SocialLinks } from './SocialLinks'
 import { PostFX } from './PostFX'
@@ -14,88 +14,80 @@ type SceneProps = {
 }
 
 /**
- * Narrative phases (scroll progress 0 → 1)
+ * Continuous narrative driven only by scroll.
+ * Transitions are hidden inside dense fog so model swaps never pop.
  *
- * HOME     0.00 – 0.38   only forest.glb, human eye-level walk along the front of the island
- * TRANSIT  0.38 – 0.48   heavy fog, fade home
- * SOCIALS  0.48 – 0.72   isolated dead tree + social orbs as last leaves
- * ROOTS    0.72 – 0.86   spiral down into roots / soil / black fog
- * PLAYER   0.86 – 1.00   stone lying on the ground
+ * 0.00–0.36  HOME     human eye-level walk in forest.glb
+ * 0.36–0.46  TRANSIT  fog swallows everything → swap to tree
+ * 0.46–0.70  SOCIALS  isolated dead tree + social leaves
+ * 0.70–0.84  ROOTS    spiral into roots / black
+ * 0.84–1.00  PLAYER   stone on the ground
  */
 
-const EYE = 1.65
+const EYE = 1.62
 
-/** HOME path — low arc along the front of the island, always looking toward the church */
-const HOME_KEYS = [
-  // start: standing near the small house + tombstones (blue circle)
-  { t: 0.0, pos: new Vector3(-5.8, EYE, 3.8), look: new Vector3(-1.2, 1.4, -0.8) },
-  // step forward along the graves
-  { t: 0.25, pos: new Vector3(-3.2, EYE, 4.6), look: new Vector3(0.2, 1.6, -1.5) },
-  // mid arc
-  { t: 0.5, pos: new Vector3(-0.4, EYE + 0.15, 5.4), look: new Vector3(0.5, 1.8, -2.2) },
-  // continue toward the right side of the clearing
-  { t: 0.75, pos: new Vector3(2.6, EYE + 0.1, 4.9), look: new Vector3(0.8, 1.9, -2.8) },
-  // end of home path — still ground level, looking at church + big tree
-  { t: 1.0, pos: new Vector3(4.4, EYE + 0.2, 3.6), look: new Vector3(1.0, 2.2, -3.5) },
+// HOME: low path along the front of the island, always looking at the church
+const HOME = [
+  { t: 0.0,  pos: [-5.4, EYE, 3.4], look: [-1.0, 1.5, -1.2] },
+  { t: 0.2,  pos: [-3.6, EYE, 4.2], look: [0.0, 1.6, -1.8] },
+  { t: 0.4,  pos: [-1.4, EYE + 0.05, 4.9], look: [0.3, 1.7, -2.2] },
+  { t: 0.6,  pos: [0.8, EYE + 0.1, 5.1], look: [0.5, 1.8, -2.5] },
+  { t: 0.8,  pos: [2.9, EYE + 0.1, 4.4], look: [0.7, 1.9, -2.8] },
+  { t: 1.0,  pos: [4.2, EYE + 0.15, 3.2], look: [0.9, 2.0, -3.0] },
 ]
 
-/** SOCIALS — camera in front of the isolated dead tree */
-const SOCIALS_KEYS = [
-  { t: 0.0, pos: new Vector3(0, 2.8, 7.5), look: new Vector3(0, 4.5, 0) },
-  { t: 0.4, pos: new Vector3(3.2, 3.5, 5.5), look: new Vector3(0, 4.2, 0) },
-  { t: 0.7, pos: new Vector3(-2.8, 4.2, 4.8), look: new Vector3(0, 4.0, 0) },
-  { t: 1.0, pos: new Vector3(0.5, 5.0, 6.2), look: new Vector3(0, 3.5, 0) },
+// SOCIALS: orbit around the isolated tree
+const SOCIALS = [
+  { t: 0.0,  pos: [0.0, 3.2, 8.0], look: [0, 4.2, 0] },
+  { t: 0.35, pos: [4.0, 4.0, 5.5], look: [0, 4.0, 0] },
+  { t: 0.65, pos: [-3.5, 4.8, 5.0], look: [0, 3.8, 0] },
+  { t: 1.0,  pos: [0.5, 5.5, 6.5], look: [0, 3.5, 0] },
 ]
 
-/** ROOTS spiral — descending around the trunk into the ground */
-const ROOTS_KEYS = [
-  { t: 0.0, pos: new Vector3(3.5, 3.5, 3.0), look: new Vector3(0, 2.0, 0) },
-  { t: 0.3, pos: new Vector3(-3.0, 1.5, 2.5), look: new Vector3(0, 0.5, 0) },
-  { t: 0.6, pos: new Vector3(2.5, -0.5, 1.8), look: new Vector3(0, -1.5, 0) },
-  { t: 1.0, pos: new Vector3(-1.0, -3.5, 0.5), look: new Vector3(0, -5.0, 0) },
+// ROOTS: spiral down
+const ROOTS = [
+  { t: 0.0,  pos: [3.2, 4.0, 3.5], look: [0, 2.5, 0] },
+  { t: 0.3,  pos: [-2.8, 1.8, 2.8], look: [0, 0.8, 0] },
+  { t: 0.6,  pos: [2.2, -0.6, 1.5], look: [0, -1.8, 0] },
+  { t: 1.0,  pos: [-0.8, -4.0, 0.2], look: [0, -6.0, 0] },
 ]
 
-/** PLAYER — stone on the ground */
-const PLAYER_KEYS = [
-  { t: 0.0, pos: new Vector3(0, 1.8, 5.5), look: new Vector3(0, 0.4, 1.2) },
-  { t: 1.0, pos: new Vector3(0, 1.5, 4.2), look: new Vector3(0, 0.35, 1.0) },
+// PLAYER
+const PLAYER = [
+  { t: 0.0,  pos: [0, 1.9, 5.8], look: [0, 0.45, 1.3] },
+  { t: 1.0,  pos: [0, 1.55, 4.0], look: [0, 0.4, 1.1] },
 ]
 
-function sampleKeys(
-  keys: { t: number; pos: Vector3; look: Vector3 }[],
-  progress: number,
-) {
+type Key = { t: number; pos: number[]; look: number[] }
+
+function sample(keys: Key[], progress: number) {
   const p = MathUtils.clamp(progress, 0, 1)
   let i = 0
   while (i < keys.length - 2 && keys[i + 1].t < p) i++
   const a = keys[i]
   const b = keys[i + 1]
-  const localT = (p - a.t) / (b.t - a.t || 1)
-  const t = localT * localT * (3 - 2 * localT)
+  const local = (p - a.t) / (b.t - a.t || 1)
+  const t = local * local * (3 - 2 * local)
   return {
-    pos: a.pos.clone().lerp(b.pos, t),
-    look: a.look.clone().lerp(b.look, t),
+    pos: new Vector3(
+      MathUtils.lerp(a.pos[0], b.pos[0], t),
+      MathUtils.lerp(a.pos[1], b.pos[1], t),
+      MathUtils.lerp(a.pos[2], b.pos[2], t),
+    ),
+    look: new Vector3(
+      MathUtils.lerp(a.look[0], b.look[0], t),
+      MathUtils.lerp(a.look[1], b.look[1], t),
+      MathUtils.lerp(a.look[2], b.look[2], t),
+    ),
   }
 }
 
-function getCameraForProgress(progress: number) {
-  if (progress < 0.38) {
-    const local = progress / 0.38
-    return sampleKeys(HOME_KEYS, local)
-  }
-  if (progress < 0.48) {
-    return sampleKeys(HOME_KEYS, 1)
-  }
-  if (progress < 0.72) {
-    const local = (progress - 0.48) / 0.24
-    return sampleKeys(SOCIALS_KEYS, local)
-  }
-  if (progress < 0.86) {
-    const local = (progress - 0.72) / 0.14
-    return sampleKeys(ROOTS_KEYS, local)
-  }
-  const local = (progress - 0.86) / 0.14
-  return sampleKeys(PLAYER_KEYS, local)
+function cameraAt(progress: number) {
+  if (progress < 0.36) return sample(HOME, progress / 0.36)
+  if (progress < 0.46) return sample(HOME, 1) // hold while fog covers
+  if (progress < 0.70) return sample(SOCIALS, (progress - 0.46) / 0.24)
+  if (progress < 0.84) return sample(ROOTS, (progress - 0.70) / 0.14)
+  return sample(PLAYER, (progress - 0.84) / 0.16)
 }
 
 function CameraRig({
@@ -105,163 +97,88 @@ function CameraRig({
 }: SceneProps) {
   const { camera, gl } = useThree()
   const lastScrolled = useRef(false)
-  const currentPos = useMemo(() => new Vector3(-5.8, EYE, 3.8), [])
-  const currentLook = useMemo(() => new Vector3(-1.2, 1.4, -0.8), [])
-  const playerTargetPos = useMemo(() => new Vector3(0, 1.15, 2.6), [])
-  const playerTargetLook = useMemo(() => new Vector3(0, 0.45, 1.0), [])
-  const crashProgress = useRef(0)
-  const wasPlayerOpen = useRef(false)
+  const pos = useMemo(() => new Vector3(-5.4, EYE, 3.4), [])
+  const look = useMemo(() => new Vector3(-1.0, 1.5, -1.2), [])
+  const crashPos = useMemo(() => new Vector3(0, 1.1, 2.4), [])
+  const crashLook = useMemo(() => new Vector3(0, 0.4, 1.0), [])
+  const crashT = useRef(0)
+  const wasOpen = useRef(false)
 
   useEffect(() => {
-    const canvas = gl.domElement
-    const onPointerDown = () => {
-      if (!isPlayerOpen) return
-      onPlayerOpenChange(false)
+    const el = gl.domElement
+    const close = () => {
+      if (isPlayerOpen) onPlayerOpenChange(false)
     }
-    canvas.addEventListener('pointerdown', onPointerDown)
-    return () => canvas.removeEventListener('pointerdown', onPointerDown)
+    el.addEventListener('pointerdown', close)
+    return () => el.removeEventListener('pointerdown', close)
   }, [gl, isPlayerOpen, onPlayerOpenChange])
 
-  useFrame((_, delta) => {
-    const scrollRange = Math.max(
-      1,
-      document.documentElement.scrollHeight - window.innerHeight,
-    )
-    const scrollProgress = MathUtils.clamp(window.scrollY / scrollRange, 0, 1)
+  useFrame((_, dt) => {
+    const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight)
+    const p = MathUtils.clamp(window.scrollY / max, 0, 1)
 
-    if (scrollProgress > 0.03 !== lastScrolled.current) {
-      lastScrolled.current = scrollProgress > 0.03
+    if (p > 0.025 !== lastScrolled.current) {
+      lastScrolled.current = p > 0.025
       onScrollStateChange?.(lastScrolled.current)
     }
 
-    if (isPlayerOpen && !wasPlayerOpen.current) {
-      crashProgress.current = 0
-    }
-    wasPlayerOpen.current = isPlayerOpen
+    if (isPlayerOpen && !wasOpen.current) crashT.current = 0
+    wasOpen.current = isPlayerOpen
 
     if (isPlayerOpen) {
-      crashProgress.current = MathUtils.damp(crashProgress.current, 1, 5.5, delta)
-      const t = crashProgress.current
-      const ease = t * t * (3 - 2 * t)
-      const crashPos = currentPos.clone().lerp(playerTargetPos, ease)
-      const crashLook = currentLook.clone().lerp(playerTargetLook, ease)
-      camera.position.copy(crashPos)
-      camera.lookAt(crashLook)
+      crashT.current = MathUtils.damp(crashT.current, 1, 6, dt)
+      const e = crashT.current * crashT.current * (3 - 2 * crashT.current)
+      camera.position.lerpVectors(pos, crashPos, e)
+      const l = look.clone().lerp(crashLook, e)
+      camera.lookAt(l)
       return
-    } else {
-      crashProgress.current = MathUtils.damp(crashProgress.current, 0, 3.0, delta)
     }
+    crashT.current = MathUtils.damp(crashT.current, 0, 3.2, dt)
 
-    const { pos, look } = getCameraForProgress(scrollProgress)
+    const target = cameraAt(p)
+    target.pos.lerp(crashPos, crashT.current)
+    target.look.lerp(crashLook, crashT.current)
 
-    const targetPos = pos.clone().lerp(playerTargetPos, crashProgress.current)
-    const targetLook = look.clone().lerp(playerTargetLook, crashProgress.current)
+    pos.x = MathUtils.damp(pos.x, target.pos.x, 3.6, dt)
+    pos.y = MathUtils.damp(pos.y, target.pos.y, 3.6, dt)
+    pos.z = MathUtils.damp(pos.z, target.pos.z, 3.6, dt)
+    look.x = MathUtils.damp(look.x, target.look.x, 4.2, dt)
+    look.y = MathUtils.damp(look.y, target.look.y, 4.2, dt)
+    look.z = MathUtils.damp(look.z, target.look.z, 4.2, dt)
 
-    currentPos.x = MathUtils.damp(currentPos.x, targetPos.x, 3.4, delta)
-    currentPos.y = MathUtils.damp(currentPos.y, targetPos.y, 3.4, delta)
-    currentPos.z = MathUtils.damp(currentPos.z, targetPos.z, 3.4, delta)
-
-    currentLook.x = MathUtils.damp(currentLook.x, targetLook.x, 4.0, delta)
-    currentLook.y = MathUtils.damp(currentLook.y, targetLook.y, 4.0, delta)
-    currentLook.z = MathUtils.damp(currentLook.z, targetLook.z, 4.0, delta)
-
-    camera.position.copy(currentPos)
-    camera.lookAt(currentLook)
+    camera.position.copy(pos)
+    camera.lookAt(look)
   })
 
   return null
 }
 
-type PlayerStoneProps = {
-  onPlayerOpenChange: (open: boolean) => void
-  isPlayerOpen: boolean
-  visible: boolean
-}
-
-function PlayerStone({ onPlayerOpenChange, isPlayerOpen, visible }: PlayerStoneProps) {
-  const [hovered, setHovered] = useState(false)
-
-  useEffect(() => {
-    return () => {
-      document.body.style.cursor = 'default'
-    }
-  }, [])
-
-  const handleClick = (event: ThreeEvent<MouseEvent>) => {
-    event.stopPropagation()
-    if (!isPlayerOpen && visible) {
-      onPlayerOpenChange(true)
-    }
-  }
-
-  const handlePointerOver = (event: ThreeEvent<PointerEvent>) => {
-    event.stopPropagation()
-    if (!visible) return
-    setHovered(true)
-    document.body.style.cursor = 'pointer'
-  }
-
-  const handlePointerOut = (event: ThreeEvent<PointerEvent>) => {
-    event.stopPropagation()
-    setHovered(false)
-    document.body.style.cursor = 'default'
-  }
-
-  return (
-    <group
-      position={[0, 0, 1.1]}
-      scale={1.05}
-      visible={visible}
-      onClick={handleClick}
-      onPointerOver={handlePointerOver}
-      onPointerOut={handlePointerOut}
-    >
-      <pointLight
-        position={[0, 1.3, 0.2]}
-        color="#888"
-        intensity={hovered || isPlayerOpen ? 1.6 : 0.45}
-        distance={hovered || isPlayerOpen ? 5 : 2.8}
-        decay={2}
-      />
-      <Model
-        path={BASE + 'assets/stone_opt.glb'}
-        scale={1.2}
-        highlight={hovered || isPlayerOpen}
-      />
-    </group>
-  )
-}
-
 function FogController() {
   const { scene } = useThree()
   useFrame(() => {
-    const scrollRange = Math.max(
-      1,
-      document.documentElement.scrollHeight - window.innerHeight,
-    )
-    const p = MathUtils.clamp(window.scrollY / scrollRange, 0, 1)
+    const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight)
+    const p = MathUtils.clamp(window.scrollY / max, 0, 1)
+    let near = 7
+    let far = 34
 
-    let near = 6
-    let far = 32
-
-    if (p < 0.38) {
-      near = 8
-      far = 36
-    } else if (p < 0.48) {
-      const local = (p - 0.38) / 0.1
-      near = MathUtils.lerp(8, 1.5, local)
-      far = MathUtils.lerp(36, 8, local)
-    } else if (p < 0.72) {
-      near = 4
-      far = 22
-    } else if (p < 0.86) {
-      const local = (p - 0.72) / 0.14
-      near = MathUtils.lerp(3, 0.8, local)
-      far = MathUtils.lerp(18, 5, local)
+    if (p < 0.36) {
+      near = 7
+      far = 34
+    } else if (p < 0.46) {
+      const t = (p - 0.36) / 0.1
+      near = MathUtils.lerp(7, 0.6, t)
+      far = MathUtils.lerp(34, 4, t)
+    } else if (p < 0.70) {
+      near = 3.5
+      far = 20
+    } else if (p < 0.84) {
+      const t = (p - 0.70) / 0.14
+      near = MathUtils.lerp(3, 0.5, t)
+      far = MathUtils.lerp(16, 3.5, t)
     } else {
-      const local = (p - 0.86) / 0.14
-      near = MathUtils.lerp(1.5, 5, local)
-      far = MathUtils.lerp(8, 18, local)
+      const t = (p - 0.84) / 0.16
+      near = MathUtils.lerp(1.2, 4.5, t)
+      far = MathUtils.lerp(6, 16, t)
     }
 
     if (scene.fog && 'near' in scene.fog) {
@@ -272,66 +189,105 @@ function FogController() {
   return null
 }
 
-function PhaseContent({
+function PhaseModels({
   isPlayerOpen,
   onPlayerOpenChange,
 }: {
   isPlayerOpen: boolean
-  onPlayerOpenChange: (open: boolean) => void
+  onPlayerOpenChange: (v: boolean) => void
 }) {
-  const [phase, setPhase] = useState<'home' | 'socials' | 'player'>('home')
+  const homeRef = useRef<Group>(null)
+  const treeRef = useRef<Group>(null)
+  const stoneVisible = useRef(false)
+  const [showStone, setShowStone] = useState(false)
+  const [showSocials, setShowSocials] = useState(false)
 
   useFrame(() => {
-    const scrollRange = Math.max(
-      1,
-      document.documentElement.scrollHeight - window.innerHeight,
-    )
-    const p = MathUtils.clamp(window.scrollY / scrollRange, 0, 1)
+    const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight)
+    const p = MathUtils.clamp(window.scrollY / max, 0, 1)
 
-    if (p < 0.46) setPhase('home')
-    else if (p < 0.84) setPhase('socials')
-    else setPhase('player')
+    if (homeRef.current) homeRef.current.visible = p < 0.42
+    if (treeRef.current) treeRef.current.visible = p >= 0.40 && p < 0.88
+
+    const social = p >= 0.46 && p < 0.72
+    if (social !== showSocials) setShowSocials(social)
+
+    const stone = p >= 0.84
+    if (stone !== stoneVisible.current) {
+      stoneVisible.current = stone
+      setShowStone(stone)
+    }
   })
 
   return (
     <>
-      {/* HOME — only forest.glb */}
-      <group visible={phase === 'home'}>
+      <group ref={homeRef}>
         <group position={[0, 0, 0]} scale={2}>
           <Model path={BASE + 'assets/forest.glb'} />
         </group>
-        <spotLight
-          position={[0, 6, 2]}
-          intensity={1.6}
-          color="#888"
-          angle={0.65}
-          penumbra={1}
-          castShadow
-        />
+        <spotLight position={[1, 7, 3]} intensity={1.5} color="#888" angle={0.7} penumbra={1} castShadow />
       </group>
 
-      {/* SOCIALS — isolated dead tree */}
-      <group visible={phase === 'socials' || phase === 'player'}>
-        <group position={[0, 0, 0]} scale={2.4}>
+      <group ref={treeRef}>
+        <group position={[0, 0, 0]} scale={2.35}>
           <Model path={BASE + 'assets/tree_web.glb'} />
         </group>
-        <spotLight
-          position={[2, 8, 4]}
-          intensity={1.4}
-          color="#888"
-          angle={0.55}
-          penumbra={1}
-        />
-        {phase === 'socials' && <SocialLinks />}
+        <spotLight position={[2, 9, 5]} intensity={1.35} color="#888" angle={0.55} penumbra={1} />
+        {showSocials && <SocialLinks />}
       </group>
 
-      {/* PLAYER stone — lies on the ground */}
       <PlayerStone
         onPlayerOpenChange={onPlayerOpenChange}
         isPlayerOpen={isPlayerOpen}
-        visible={phase === 'player'}
+        visible={showStone}
       />
     </>
+  )
+}
+
+type StoneProps = {
+  onPlayerOpenChange: (v: boolean) => void
+  isPlayerOpen: boolean
+  visible: boolean
+}
+
+function PlayerStone({ onPlayerOpenChange, isPlayerOpen, visible }: StoneProps) {
+  const [hovered, setHovered] = useState(false)
+
+  useEffect(() => () => {
+    document.body.style.cursor = 'default'
+  }, [])
+
+  return (
+    <group
+      position={[0, 0, 1.0]}
+      scale={1.0}
+      visible={visible}
+      onClick={(e) => {
+        e.stopPropagation()
+        if (!isPlayerOpen && visible) onPlayerOpenChange(true)
+      }}
+      onPointerOver={(e) => {
+        e.stopPropagation()
+        if (!visible) return
+        setHovered(true)
+        document.body.style.cursor = 'pointer'
+      }}
+      onPointerOut={(e) => {
+        e.stopPropagation()
+        setHovered(false)
+        document.body.style.cursor = 'default'
+      }}
+    >
+      <pointLight
+        position={[0, 1.2, 0.25]}
+        color="#888"
+        intensity={hovered || isPlayerOpen ? 1.7 : 0.4}
+        distance={hovered || isPlayerOpen ? 5 : 2.6}
+        decay={2}
+      />
+      <Model path={BASE + 'assets/stone_opt.glb'} scale={1.15} highlight={hovered || isPlayerOpen} />
+    </group>
   )
 }
 
@@ -339,18 +295,11 @@ function World(props: SceneProps) {
   return (
     <>
       <color attach="background" args={['#000']} />
-      <fog attach="fog" args={['#000', 6, 32]} />
+      <fog attach="fog" args={['#000', 7, 34]} />
       <FogController />
-
-      <ambientLight intensity={0.14} color="#888" />
-      <directionalLight
-        intensity={1.25}
-        color="#888"
-        position={[4, 9, 6]}
-        castShadow
-      />
-
-      <PhaseContent
+      <ambientLight intensity={0.13} color="#888" />
+      <directionalLight intensity={1.2} color="#888" position={[4, 10, 5]} castShadow />
+      <PhaseModels
         isPlayerOpen={props.isPlayerOpen}
         onPlayerOpenChange={props.onPlayerOpenChange}
       />
@@ -361,19 +310,10 @@ function World(props: SceneProps) {
 export function Scene(props: SceneProps) {
   return (
     <Canvas
-      camera={{
-        position: [-5.8, EYE, 3.8],
-        fov: 55,
-        near: 0.08,
-        far: 120,
-      }}
+      camera={{ position: [-5.4, EYE, 3.4], fov: 55, near: 0.08, far: 100 }}
       dpr={[1, 1.5]}
       shadows
-      gl={{
-        antialias: true,
-        alpha: false,
-        powerPreference: 'high-performance',
-      }}
+      gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
       style={{
         position: 'fixed',
         inset: 0,
