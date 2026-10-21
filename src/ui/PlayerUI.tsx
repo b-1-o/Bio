@@ -1,12 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
-import cigarettes from '../../music/Cigarettes out the Window.mp3?url'
-import vanished from '../../music/Crystal Castles - Vanished.mp3?url'
-import deathMetal from '../../music/DᐳEᐳAᐳTᐳHᐳMᐳTᐳAᐳL.mp3?url'
-import almostWorked from '../../music/It Almost Worked.mp3?url'
-import jane from '../../music/Jane!.mp3?url'
-import pantyhose from '../../music/Pantyhose.mp3?url'
-import televisions from '../../music/Televisions.mp3?url'
-import typeONegative from "../../music/Type O Negative - I Don't Wanna Be Me.mp3?url"
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import './PlayerUI.css'
 
 type Track = {
@@ -15,15 +7,17 @@ type Track = {
   src: string
 }
 
+const BASE = import.meta.env.BASE_URL
+
 const tracks: Track[] = [
-  { title: 'Cigarettes out the Window', artist: 'TV Girl', src: cigarettes },
-  { title: 'Vanished', artist: 'Crystal Castles', src: vanished },
-  { title: 'DᐳEᐳAᐳTᐳHᐳMᐳTᐳAᐳL', artist: 'Library track', src: deathMetal },
-  { title: 'It Almost Worked', artist: 'Library track', src: almostWorked },
-  { title: 'Jane!', artist: 'Library track', src: jane },
-  { title: 'Pantyhose', artist: 'Library track', src: pantyhose },
-  { title: 'Televisions', artist: 'Library track', src: televisions },
-  { title: "I Don't Wanna Be Me", artist: 'Type O Negative', src: typeONegative },
+  { title: 'Cigarettes out the Window', artist: 'TV Girl', src: `${BASE}music/01-cigarettes-out-the-window.mp3` },
+  { title: 'Vanished', artist: 'Crystal Castles', src: `${BASE}music/02-vanished.mp3` },
+  { title: 'DᐳEᐳAᐳTᐳHᐳMᐳEᐳTᐳAᐳL', artist: 'Library track', src: `${BASE}music/03-deathmetal.mp3` },
+  { title: 'It Almost Worked', artist: 'Library track', src: `${BASE}music/04-it-almost-worked.mp3` },
+  { title: 'Jane!', artist: 'Library track', src: `${BASE}music/05-jane.mp3` },
+  { title: 'Pantyhose', artist: 'Library track', src: `${BASE}music/06-pantyhose.mp3` },
+  { title: 'Televisions', artist: 'Library track', src: `${BASE}music/07-televisions.mp3` },
+  { title: "I Don't Wanna Be Me", artist: 'Type O Negative', src: `${BASE}music/08-i-dont-wanna-be-me.mp3` },
 ]
 
 type PlayerUIProps = {
@@ -154,7 +148,7 @@ export function PlayerUI({ onClose }: PlayerUIProps) {
             value={Math.min(currentTime, duration || 0)}
             onChange={(event) => seek(Number(event.currentTarget.value))}
             aria-label="Seek track"
-            style={{ '--range-progress': `${duration ? (currentTime / duration) * 100 : 0}%` } as React.CSSProperties}
+            style={{ '--range-progress': `${duration ? (currentTime / duration) * 100 : 0}%` } as CSSProperties}
           />
           <div className="player-timeline__times">
             <span>{formatTime(currentTime)}</span>
