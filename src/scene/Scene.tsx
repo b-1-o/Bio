@@ -45,14 +45,16 @@ function measureForest(scene: Object3D) {
 }
 
 // HOME: strictly eye-level walk, constant height, looking forward at the church
-const HOME = [
-  { t: 0.0,  pos: [-5.4, EYE, 3.4], look: [-0.8, EYE, -1.0] },
-  { t: 0.2,  pos: [-3.6, EYE, 4.2], look: [0.0, EYE, -1.6] },
-  { t: 0.4,  pos: [-1.4, EYE, 4.9], look: [0.3, EYE + 0.1, -2.0] },
-  { t: 0.6,  pos: [0.8, EYE, 5.1], look: [0.5, EYE + 0.15, -2.4] },
-  { t: 0.8,  pos: [2.9, EYE, 4.4], look: [0.7, EYE + 0.2, -2.7] },
-  { t: 1.0,  pos: [4.2, EYE, 3.2], look: [0.9, EYE + 0.25, -2.9] },
-]
+function homeKeys(eye: number): Key[] {
+  return [
+    { t: 0.0, pos: [-5.4, eye, 3.4], look: [-0.8, eye, -1.0] },
+    { t: 0.2, pos: [-3.6, eye, 4.2], look: [0.0, eye, -1.6] },
+    { t: 0.4, pos: [-1.4, eye, 4.9], look: [0.3, eye, -2.0] },
+    { t: 0.6, pos: [0.8, eye, 5.1], look: [0.5, eye, -2.4] },
+    { t: 0.8, pos: [2.9, eye, 4.4], look: [0.7, eye, -2.7] },
+    { t: 1.0, pos: [4.2, eye, 3.2], look: [0.9, eye, -2.9] },
+  ]
+}
 
 // SOCIALS: orbit around the isolated tree
 const SOCIALS = [
@@ -153,7 +155,7 @@ function CameraRig({
     }
     crashT.current = MathUtils.damp(crashT.current, 0, 3.2, dt)
 
-    const target = cameraAt(p)
+    const target = cameraAt(p, EYE)
     target.pos.lerp(crashPos, crashT.current)
     target.look.lerp(crashLook, crashT.current)
 
