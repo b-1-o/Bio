@@ -339,7 +339,7 @@ function World(props: SceneProps) {
 export function Scene(props: SceneProps) {
   return (
     <Canvas
-      camera={{ position: [-5.4, EYE, 3.4], fov: 55, near: 0.08, far: 100 }}
+      camera={{ position: [-5.4, 1.25, 3.4], fov: 55, near: 0.08, far: 100 }}
       dpr={[1, 1.5]}
       shadows
       gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
