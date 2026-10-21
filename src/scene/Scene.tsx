@@ -155,7 +155,7 @@ function CameraRig({
     }
     crashT.current = MathUtils.damp(crashT.current, 0, 3.2, dt)
 
-    const target = cameraAt(p, EYE)
+    const target = cameraAt(p, EYE, measured.size)
     target.pos.lerp(crashPos, crashT.current)
     target.look.lerp(crashLook, crashT.current)
 
