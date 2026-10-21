@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Scene } from './scene/Scene'
 import { PlayerUI } from './ui/PlayerUI'
 import './App.css'
@@ -7,11 +7,18 @@ export default function App() {
   const [isPlayerOpen, setIsPlayerOpen] = useState(false)
   const [hasScrolled, setHasScrolled] = useState(false)
 
+  const markScrolled = useCallback((scrolled: boolean) => {
+    if (scrolled) setHasScrolled(true)
+  }, [])
+
   useEffect(() => {
-    const updateHint = () => setHasScrolled(window.scrollY > 50)
+    const updateHint = () => {
+      if (window.scrollY > 50) setHasScrolled(true)
+    }
 
     updateHint()
     window.addEventListener('scroll', updateHint, { passive: true })
+
     return () => window.removeEventListener('scroll', updateHint)
   }, [])
 
@@ -38,6 +45,7 @@ export default function App() {
       <Scene
         isPlayerOpen={isPlayerOpen}
         onPlayerOpenChange={setIsPlayerOpen}
+        onScrollStateChange={markScrolled}
       />
 
       <div className="scene-wordmark" aria-hidden="true">
