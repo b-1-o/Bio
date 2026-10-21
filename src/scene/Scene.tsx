@@ -3,10 +3,13 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Box3, MathUtils, Vector3, Group, type Object3D } from 'three'
 import { useGLTF } from '@react-three/drei'
 import { Model } from './Model'
-import { SocialLinks } from './SocialLinks'
+import { SocialLinks, TREE_SCALE } from './SocialLinks'
 import { PostFX } from './PostFX'
 
 const BASE = import.meta.env.BASE_URL
+const FOREST_SCALE = 2
+const STONE_SCALE = 1.15
+const STONE_POSITION = new Vector3(0, 0, 1)
 
 type SceneProps = {
   isPlayerOpen: boolean
@@ -14,169 +17,308 @@ type SceneProps = {
   onScrollStateChange?: (scrolled: boolean) => void
 }
 
-/**
- * Continuous narrative driven only by scroll.
- * Transitions are hidden inside dense fog so model swaps never pop.
- *
- * 0.00–0.36  HOME     human eye-level walk in forest.glb
- * 0.36–0.46  TRANSIT  fog swallows everything → swap to tree
- * 0.46–0.70  SOCIALS  isolated dead tree + social leaves
- * 0.70–0.84  ROOTS    spiral into roots / black
- * 0.84–1.00  PLAYER   stone on the ground
- */
+type Key = { t: number; pos: [number, number, number]; look: [number, number, number] }
 
-// Measure the actual forest asset once (useGLTF caches the source). Model.tsx grounds its clone;
- // this helper applies the same grounding offset before deriving a human eye height.
-function measureForest(scene: Object3D) {
-  const bounds = new Box3().setFromObject(scene)
-  if (bounds.isEmpty()) return { eye: 1.25, min: new Vector3(-5, 0, -5), size: new Vector3(10, 9, 10) }
-  const min = bounds.min.clone()
-  const size = bounds.getSize(new Vector3())
-  // forest.glb is rendered at scale 2. A person’s eye line is estimated from the
-  // measured environment height; all HOME keyframes then share this exact Y.
-  const scale = 2
-  const groundedHeight = size.y * scale
-  const eye = Math.max(0.8, Math.min(3.2, groundedHeight * 0.14))
-  return {
-    eye,
-    min: new Vector3(min.x * scale, 0, min.z * scale),
-    size: size.multiplyScalar(scale),
-  }
+type AssetMetrics = {
+  min: Vector3
+  max: Vector3
+  size: Vector3
+  center: Vector3
+  eye?: number
+  churchTarget?: Vector3
 }
 
-// HOME: strictly eye-level walk, constant height, looking forward at the church
-function homeKeys(eye: number, size: Vector3): Key[] {
-  // The route is scaled to the measured, grounded forest bounds. Front is +Z.
-  const w = Math.max(size.x, 1)
-  const d = Math.max(size.z, 1)
-  const x = (fraction: number) => (fraction - 0.5) * w
-  const z = (fraction: number) => (fraction - 0.5) * d
+type Routes = {
+  eye: number
+  home: Key[]
+  socials: Key[]
+  roots: Key[]
+  player: Key[]
+  stoneCenter: Vector3
+  crashPosition: Vector3
+  crashLook: Vector3
+}
+
+/**
+ * Scroll narrative:
+ * HOME 0.00–0.36 · black-fog swap 0.36–0.46
+ * SOCIALS 0.46–0.70 · ROOTS 0.70–0.84 · black-fog swap/reveal 0.84–0.88
+ * PLAYER 0.88–1.00
+ *
+ * All geometry metrics use the same scales as the rendered model groups.
+ * Model.tsx grounds each cloned GLTF; the metrics below apply that same Y offset.
+ */
+function measureAsset(scene: Object3D, scale: number): AssetMetrics {
+  scene.updateMatrixWorld(true)
+  const raw = new Box3().setFromObject(scene)
+  if (raw.isEmpty()) {
+    const size = new Vector3(10, 8, 10).multiplyScalar(scale)
+    const min = new Vector3(-size.x / 2, 0, -size.z / 2)
+    const max = new Vector3(size.x / 2, size.y, size.z / 2)
+    return { min, max, size, center: new Vector3(0, size.y / 2, 0) }
+  }
+
+  const rawSize = raw.getSize(new Vector3())
+  const size = rawSize.clone().multiplyScalar(scale)
+  const min = new Vector3(raw.min.x * scale, 0, raw.min.z * scale)
+  const max = new Vector3(raw.max.x * scale, size.y, raw.max.z * scale)
+  const center = new Vector3(
+    (raw.min.x + raw.max.x) * 0.5 * scale,
+    size.y * 0.5,
+    (raw.min.z + raw.max.z) * 0.5 * scale,
+  )
+
+  let namedHouseHeight = 0
+  let churchVolume = 0
+  let churchTarget: Vector3 | undefined
+
+  scene.traverse((object) => {
+    const name = object.name.toLowerCase()
+    const bounds = new Box3().setFromObject(object)
+    if (bounds.isEmpty()) return
+    const objectSize = bounds.getSize(new Vector3())
+    const worldHeight = objectSize.y * scale
+
+    // Prefer a named one-storey house/cabin over the church tower or trees.
+    if (
+      /(house|cabin|cottage|shack|home)/i.test(name) &&
+      worldHeight >= 1.2 &&
+      worldHeight <= 4.5
+    ) {
+      namedHouseHeight = Math.max(namedHouseHeight, worldHeight)
+    }
+
+    if (/(church|chapel|cathedral|steeple)/i.test(name) && worldHeight < size.y * 0.96) {
+      const volume = objectSize.x * objectSize.y * objectSize.z
+      if (volume > churchVolume) {
+        churchVolume = volume
+        const c = bounds.getCenter(new Vector3())
+        churchTarget = new Vector3(c.x * scale, 0, c.z * scale)
+      }
+    }
+  })
+
+  // The doorway/house height is the preferred reference. For GLBs without
+  // semantic node names, use a conservative human-scale fallback instead of
+  // a percentage of the tallest tree/church steeple.
+  const eye = namedHouseHeight > 0
+    ? MathUtils.clamp(namedHouseHeight * 0.60, 1.15, 1.85)
+    : MathUtils.clamp(size.y * 0.16, 1.25, 1.65)
+
+  return { min, max, size, center, eye, churchTarget }
+}
+
+function homeKeys(forest: AssetMetrics, eye: number): Key[] {
+  const x = (fraction: number) => forest.min.x + forest.size.x * fraction
+  const z = (fraction: number) => forest.min.z + forest.size.z * fraction
+  const church = forest.churchTarget ?? new Vector3(
+    forest.min.x + forest.size.x * 0.52,
+    0,
+    forest.min.z + forest.size.z * 0.43,
+  )
+  // One fixed horizontal sightline for the whole walk: movement changes the
+  // viewer's position, never the fact that they are looking toward the church.
+  const look: [number, number, number] = [church.x, eye + 0.08, church.z]
   return [
-    { t: 0.0, pos: [x(0.20), eye, z(0.83)], look: [x(0.43), eye, z(0.30)] },
-    { t: 0.2, pos: [x(0.29), eye, z(0.88)], look: [x(0.48), eye, z(0.25)] },
-    { t: 0.4, pos: [x(0.39), eye, z(0.91)], look: [x(0.50), eye, z(0.22)] },
-    { t: 0.6, pos: [x(0.52), eye, z(0.92)], look: [x(0.52), eye, z(0.19)] },
-    { t: 0.8, pos: [x(0.65), eye, z(0.87)], look: [x(0.53), eye, z(0.16)] },
-    { t: 1.0, pos: [x(0.74), eye, z(0.79)], look: [x(0.54), eye, z(0.13)] },
+    { t: 0.00, pos: [x(0.20), eye, z(0.80)], look },
+    { t: 0.20, pos: [x(0.29), eye, z(0.85)], look },
+    { t: 0.40, pos: [x(0.40), eye, z(0.88)], look },
+    { t: 0.60, pos: [x(0.53), eye, z(0.88)], look },
+    { t: 0.80, pos: [x(0.66), eye, z(0.84)], look },
+    { t: 1.00, pos: [x(0.77), eye, z(0.78)], look },
   ]
 }
 
-// SOCIALS: orbit around the isolated tree
-const SOCIALS = [
-  { t: 0.0,  pos: [0.0, 3.2, 8.0], look: [0, 4.2, 0] },
-  { t: 0.35, pos: [4.0, 4.0, 5.5], look: [0, 4.0, 0] },
-  { t: 0.65, pos: [-3.5, 4.8, 5.0], look: [0, 3.8, 0] },
-  { t: 1.0,  pos: [0.5, 5.5, 6.5], look: [0, 3.5, 0] },
-]
+function socialKeys(tree: AssetMetrics): Key[] {
+  const height = Math.max(tree.size.y, 2)
+  const radius = Math.max(3.6, Math.max(tree.size.x, tree.size.z) * 0.78 + 0.7)
+  const cx = tree.center.x
+  const cz = tree.center.z
+  const at = (angle: number, y: number, r = radius): [number, number, number] => [
+    cx + Math.sin(angle) * r,
+    y,
+    cz + Math.cos(angle) * r,
+  ]
+  const look = (fraction: number): [number, number, number] => [cx, height * fraction, cz]
+  return [
+    { t: 0.00, pos: at(0.05, height * 0.62), look: look(0.67) },
+    { t: 0.34, pos: at(0.72, height * 0.57), look: look(0.62) },
+    { t: 0.68, pos: at(1.55, height * 0.51), look: look(0.56) },
+    { t: 1.00, pos: at(2.35, height * 0.44), look: look(0.50) },
+  ]
+}
 
-// ROOTS: spiral down
-const ROOTS = [
-  { t: 0.0,  pos: [3.2, 4.0, 3.5], look: [0, 2.5, 0] },
-  { t: 0.3,  pos: [-2.8, 1.8, 2.8], look: [0, 0.8, 0] },
-  { t: 0.6,  pos: [2.2, -0.6, 1.5], look: [0, -1.8, 0] },
-  { t: 1.0,  pos: [-0.8, -4.0, 0.2], look: [0, -6.0, 0] },
-]
+function rootKeys(tree: AssetMetrics, socials: Key[]): Key[] {
+  const height = Math.max(tree.size.y, 2)
+  const radius = Math.max(3.6, Math.max(tree.size.x, tree.size.z) * 0.78 + 0.7)
+  const cx = tree.center.x
+  const cz = tree.center.z
+  const last = socials[socials.length - 1].pos
+  const startAngle = 2.35
+  const at = (angle: number, y: number, r: number): [number, number, number] => [
+    cx + Math.sin(angle) * r,
+    y,
+    cz + Math.cos(angle) * r,
+  ]
+  const lookAt = (y: number): [number, number, number] => [cx, y, cz]
+  return [
+    { t: 0.00, pos: last, look: socials[socials.length - 1].look },
+    { t: 0.32, pos: at(startAngle + 1.65, height * 0.30, radius * 0.72), look: lookAt(height * 0.36) },
+    { t: 0.67, pos: at(startAngle + 3.55, height * 0.16, radius * 0.43), look: lookAt(height * 0.19) },
+    { t: 1.00, pos: at(startAngle + 5.20, Math.max(0.22, height * 0.065), radius * 0.18), look: lookAt(Math.max(0.3, height * 0.11)) },
+  ]
+}
 
-// PLAYER
-const PLAYER = [
-  { t: 0.0,  pos: [0, 1.9, 5.8], look: [0, 0.45, 1.3] },
-  { t: 1.0,  pos: [0, 1.55, 4.0], look: [0, 0.4, 1.1] },
-]
-
-type Key = { t: number; pos: number[]; look: number[] }
-
+// Cubic Catmull–Rom interpolation carries momentum through keyframes; unlike
+// smoothstep on every segment, the camera does not visibly slow at each point.
 function sample(keys: Key[], progress: number) {
   const p = MathUtils.clamp(progress, 0, 1)
   let i = 0
-  while (i < keys.length - 2 && keys[i + 1].t < p) i++
+  while (i < keys.length - 2 && keys[i + 1].t < p) i += 1
   const a = keys[i]
   const b = keys[i + 1]
-  const local = (p - a.t) / (b.t - a.t || 1)
-  const t = local * local * (3 - 2 * local)
+  const previous = keys[Math.max(0, i - 1)]
+  const next = keys[Math.min(keys.length - 1, i + 2)]
+  const local = MathUtils.clamp((p - a.t) / (b.t - a.t || 1), 0, 1)
+
+  const interpolate = (field: 'pos' | 'look', axis: 0 | 1 | 2) => {
+    const p0 = previous[field][axis]
+    const p1 = a[field][axis]
+    const p2 = b[field][axis]
+    const p3 = next[field][axis]
+    const t2 = local * local
+    const t3 = t2 * local
+    return 0.5 * (
+      2 * p1 +
+      (-p0 + p2) * local +
+      (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 +
+      (-p0 + 3 * p1 - 3 * p2 + p3) * t3
+    )
+  }
+
   return {
-    pos: new Vector3(
-      MathUtils.lerp(a.pos[0], b.pos[0], t),
-      MathUtils.lerp(a.pos[1], b.pos[1], t),
-      MathUtils.lerp(a.pos[2], b.pos[2], t),
-    ),
-    look: new Vector3(
-      MathUtils.lerp(a.look[0], b.look[0], t),
-      MathUtils.lerp(a.look[1], b.look[1], t),
-      MathUtils.lerp(a.look[2], b.look[2], t),
-    ),
+    pos: new Vector3(interpolate('pos', 0), interpolate('pos', 1), interpolate('pos', 2)),
+    look: new Vector3(interpolate('look', 0), interpolate('look', 1), interpolate('look', 2)),
   }
 }
 
-function cameraAt(progress: number, eye: number, forestSize: Vector3) {
-  const home = homeKeys(eye, forestSize)
-  if (progress < 0.36) return sample(home, progress / 0.36)
-  if (progress < 0.46) return sample(home, 1)
-  if (progress < 0.70) return sample(SOCIALS, (progress - 0.46) / 0.24)
-  if (progress < 0.84) return sample(ROOTS, (progress - 0.70) / 0.14)
-  return sample(PLAYER, (progress - 0.84) / 0.16)
+function createRoutes(forest: AssetMetrics, tree: AssetMetrics, stone: AssetMetrics): Routes {
+  const eye = forest.eye ?? 1.55
+  const home = homeKeys(forest, eye)
+  const socials = socialKeys(tree)
+  const roots = rootKeys(tree, socials)
+
+  // stone_opt.glb is grounded by Model.tsx, then placed at STONE_POSITION.
+  const stoneCenter = new Vector3(
+    stone.center.x + STONE_POSITION.x,
+    Math.max(0.05, stone.size.y * 0.42),
+    stone.center.z + STONE_POSITION.z,
+  )
+  const frontDistance = Math.max(3.1, stone.size.z * 2.1 + stone.size.x * 0.22)
+  const playerLook: [number, number, number] = [
+    stoneCenter.x,
+    Math.max(0.18, stone.size.y * 0.42),
+    stoneCenter.z,
+  ]
+  const player: Key[] = [
+    {
+      t: 0,
+      pos: [stoneCenter.x, Math.max(eye * 0.94, stone.size.y * 1.25), stoneCenter.z + frontDistance],
+      look: playerLook,
+    },
+    {
+      t: 0.55,
+      pos: [stoneCenter.x, Math.max(eye * 0.94, stone.size.y * 1.2), stoneCenter.z + frontDistance * 0.88],
+      look: playerLook,
+    },
+    {
+      t: 1,
+      pos: [stoneCenter.x, Math.max(eye * 0.94, stone.size.y * 1.2), stoneCenter.z + frontDistance * 0.80],
+      look: playerLook,
+    },
+  ]
+
+  const crashPosition = new Vector3(
+    stoneCenter.x,
+    Math.max(0.2, stone.size.y * 0.52),
+    stoneCenter.z + Math.max(0.18, stone.size.z * 0.12),
+  )
+  const crashLook = stoneCenter.clone()
+  return { eye, home, socials, roots, player, stoneCenter, crashPosition, crashLook }
 }
 
-function CameraRig({
-  isPlayerOpen,
-  onScrollStateChange,
-  onPlayerOpenChange,
-}: SceneProps) {
+function cameraAt(progress: number, routes: Routes) {
+  if (progress < 0.36) return sample(routes.home, progress / 0.36)
+  if (progress < 0.46) return sample(routes.home, 1)
+  if (progress < 0.70) return sample(routes.socials, (progress - 0.46) / 0.24)
+  if (progress < 0.84) return sample(routes.roots, (progress - 0.70) / 0.14)
+  return sample(routes.player, (progress - 0.84) / 0.16)
+}
+
+function scrollProgress() {
+  const scrollable = Math.max(1, document.documentElement.scrollHeight - window.innerHeight)
+  return MathUtils.clamp(window.scrollY / scrollable, 0, 1)
+}
+
+function CameraRig({ isPlayerOpen, onScrollStateChange, onPlayerOpenChange }: SceneProps) {
   const { camera, gl } = useThree()
   const { scene: forestSource } = useGLTF(BASE + 'assets/forest.glb')
-  const measured = useMemo(() => measureForest(forestSource), [forestSource])
-  const EYE = measured.eye
-  const initialHome = useMemo(() => homeKeys(EYE, measured.size)[0], [EYE, measured.size])
-  const lastScrolled = useRef(false)
-  const pos = useMemo(() => new Vector3(initialHome.pos[0], initialHome.pos[1], initialHome.pos[2]), [initialHome])
-  const look = useMemo(() => new Vector3(initialHome.look[0], initialHome.look[1], initialHome.look[2]), [initialHome])
-  const crashPos = useMemo(() => new Vector3(0, 1.1, 2.4), [])
-  const crashLook = useMemo(() => new Vector3(0, 0.4, 1.0), [])
+  const { scene: treeSource } = useGLTF(BASE + 'assets/tree_web.glb')
+  const { scene: stoneSource } = useGLTF(BASE + 'assets/stone_opt.glb')
+
+  const forest = useMemo(() => measureAsset(forestSource, FOREST_SCALE), [forestSource])
+  const tree = useMemo(() => measureAsset(treeSource, TREE_SCALE), [treeSource])
+  const stone = useMemo(() => measureAsset(stoneSource, STONE_SCALE), [stoneSource])
+  const routes = useMemo(() => createRoutes(forest, tree, stone), [forest, tree, stone])
+
+  const initial = routes.home[0]
+  const position = useMemo(() => new Vector3(...initial.pos), [initial])
+  const look = useMemo(() => new Vector3(...initial.look), [initial])
   const crashT = useRef(0)
   const wasOpen = useRef(false)
+  const lastScrolled = useRef(false)
 
   useEffect(() => {
-    const el = gl.domElement
-    const close = () => {
+    const canvas = gl.domElement
+    const closeOnBackground = () => {
       if (isPlayerOpen) onPlayerOpenChange(false)
     }
-    el.addEventListener('pointerdown', close)
-    return () => el.removeEventListener('pointerdown', close)
+    canvas.addEventListener('pointerdown', closeOnBackground)
+    return () => canvas.removeEventListener('pointerdown', closeOnBackground)
   }, [gl, isPlayerOpen, onPlayerOpenChange])
 
   useFrame((_, dt) => {
-    const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight)
-    const p = MathUtils.clamp(window.scrollY / max, 0, 1)
-
-    if (p > 0.025 !== lastScrolled.current) {
-      lastScrolled.current = p > 0.025
-      onScrollStateChange?.(lastScrolled.current)
+    const p = scrollProgress()
+    const scrolled = p > 0.025
+    if (scrolled !== lastScrolled.current) {
+      lastScrolled.current = scrolled
+      onScrollStateChange?.(scrolled)
     }
 
     if (isPlayerOpen && !wasOpen.current) crashT.current = 0
     wasOpen.current = isPlayerOpen
 
     if (isPlayerOpen) {
-      crashT.current = MathUtils.damp(crashT.current, 1, 6, dt)
-      const e = crashT.current * crashT.current * (3 - 2 * crashT.current)
-      camera.position.lerpVectors(pos, crashPos, e)
-      const l = look.clone().lerp(crashLook, e)
-      camera.lookAt(l)
+      crashT.current = MathUtils.damp(crashT.current, 1, 7.5, dt)
+      const eased = crashT.current * crashT.current * (3 - 2 * crashT.current)
+      camera.position.lerpVectors(position, routes.crashPosition, eased)
+      camera.lookAt(look.clone().lerp(routes.crashLook, eased))
       return
     }
-    crashT.current = MathUtils.damp(crashT.current, 0, 3.2, dt)
 
-    const target = cameraAt(p, EYE, measured.size)
-    target.pos.lerp(crashPos, crashT.current)
-    target.look.lerp(crashLook, crashT.current)
+    crashT.current = MathUtils.damp(crashT.current, 0, 3.5, dt)
+    const target = cameraAt(p, routes)
+    target.pos.lerp(routes.crashPosition, crashT.current)
+    target.look.lerp(routes.crashLook, crashT.current)
 
-    pos.x = MathUtils.damp(pos.x, target.pos.x, 3.6, dt)
-    pos.y = MathUtils.damp(pos.y, target.pos.y, 3.6, dt)
-    pos.z = MathUtils.damp(pos.z, target.pos.z, 3.6, dt)
-    look.x = MathUtils.damp(look.x, target.look.x, 4.2, dt)
-    look.y = MathUtils.damp(look.y, target.look.y, 4.2, dt)
-    look.z = MathUtils.damp(look.z, target.look.z, 4.2, dt)
+    position.x = MathUtils.damp(position.x, target.pos.x, 3.8, dt)
+    position.y = MathUtils.damp(position.y, target.pos.y, 3.8, dt)
+    position.z = MathUtils.damp(position.z, target.pos.z, 3.8, dt)
+    look.x = MathUtils.damp(look.x, target.look.x, 4.4, dt)
+    look.y = MathUtils.damp(look.y, target.look.y, 4.4, dt)
+    look.z = MathUtils.damp(look.z, target.look.z, 4.4, dt)
 
-    camera.position.copy(pos)
+    camera.position.copy(position)
     camera.lookAt(look)
   })
 
@@ -186,38 +328,40 @@ function CameraRig({
 function FogController() {
   const { scene } = useThree()
   useFrame(() => {
-    const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight)
-    const p = MathUtils.clamp(window.scrollY / max, 0, 1)
-    let near = 7
-    let far = 34
+    const p = scrollProgress()
+    let near: number
+    let far: number
 
     if (p < 0.36) {
       near = 7
       far = 34
     } else if (p < 0.46) {
-      const t = (p - 0.36) / 0.1
-      near = MathUtils.lerp(7, 0.05, t)
-      far = MathUtils.lerp(34, 0.7, t)
+      const t = (p - 0.36) / 0.10
+      near = MathUtils.lerp(7, 0.04, t)
+      far = MathUtils.lerp(34, 0.65, t)
     } else if (p < 0.49) {
-      const t = MathUtils.clamp((p - 0.46) / 0.03, 0, 1)
-      near = MathUtils.lerp(0.05, 3.5, t)
-      far = MathUtils.lerp(0.7, 20, t)
+      const t = (p - 0.46) / 0.03
+      near = MathUtils.lerp(0.04, 3.2, t)
+      far = MathUtils.lerp(0.65, 21, t)
     } else if (p < 0.70) {
-      near = 3.5
-      far = 20
+      near = 3.2
+      far = 21
     } else if (p < 0.84) {
       const t = (p - 0.70) / 0.14
-      near = MathUtils.lerp(2.8, 0.05, t)
-      far = MathUtils.lerp(22, 0.7, t)
+      near = MathUtils.lerp(3.2, 0.04, t)
+      far = MathUtils.lerp(21, 0.65, t)
+    } else if (p < 0.88) {
+      const t = (p - 0.84) / 0.04
+      near = MathUtils.lerp(0.04, 3.2, t)
+      far = MathUtils.lerp(0.65, 21, t)
     } else {
-      const t = (p - 0.84) / 0.16
-      near = MathUtils.lerp(1.2, 4.5, t)
-      far = MathUtils.lerp(6, 16, t)
+      near = 3.2
+      far = 21
     }
 
     if (scene.fog && 'near' in scene.fog) {
-      ;(scene.fog as any).near = near
-      ;(scene.fog as any).far = far
+      scene.fog.near = near
+      scene.fog.far = far
     }
   })
   return null
@@ -228,7 +372,7 @@ function PhaseModels({
   onPlayerOpenChange,
 }: {
   isPlayerOpen: boolean
-  onPlayerOpenChange: (v: boolean) => void
+  onPlayerOpenChange: (open: boolean) => void
 }) {
   const homeRef = useRef<Group>(null)
   const treeRef = useRef<Group>(null)
@@ -237,37 +381,36 @@ function PhaseModels({
   const [showSocials, setShowSocials] = useState(false)
 
   useFrame(() => {
-    const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight)
-    const p = MathUtils.clamp(window.scrollY / max, 0, 1)
-
+    const p = scrollProgress()
+    // Model swaps happen at the exact far-fog minimum (far = 0.65).
     if (homeRef.current) homeRef.current.visible = p < 0.46
     if (treeRef.current) treeRef.current.visible = p >= 0.46 && p < 0.84
 
-    const social = p >= 0.46 && p < 0.72
-    if (social !== showSocials) setShowSocials(social)
+    const socialsVisible = p >= 0.46 && p < 0.70
+    if (socialsVisible !== showSocials) setShowSocials(socialsVisible)
 
-    const stone = p >= 0.84
-    if (stone !== stoneVisible.current) {
-      stoneVisible.current = stone
-      setShowStone(stone)
+    const stoneIsVisible = p >= 0.84
+    if (stoneIsVisible !== stoneVisible.current) {
+      stoneVisible.current = stoneIsVisible
+      setShowStone(stoneIsVisible)
     }
   })
 
   return (
     <>
       <group ref={homeRef}>
-        <group position={[0, 0, 0]} scale={2}>
+        <group scale={FOREST_SCALE}>
           <Model path={BASE + 'assets/forest.glb'} />
         </group>
         <spotLight position={[1, 7, 3]} intensity={1.5} color="#888" angle={0.7} penumbra={1} castShadow />
       </group>
 
       <group ref={treeRef}>
-        <group position={[0, 0, 0]} scale={2.35}>
+        <group scale={TREE_SCALE}>
           <Model path={BASE + 'assets/tree_web.glb'} />
         </group>
         <spotLight position={[2, 9, 5]} intensity={1.35} color="#888" angle={0.55} penumbra={1} />
-        {showSocials && <SocialLinks />}
+        {showSocials && <SocialLinks scale={TREE_SCALE} />}
       </group>
 
       <PlayerStone
@@ -280,7 +423,7 @@ function PhaseModels({
 }
 
 type StoneProps = {
-  onPlayerOpenChange: (v: boolean) => void
+  onPlayerOpenChange: (open: boolean) => void
   isPlayerOpen: boolean
   visible: boolean
 }
@@ -294,21 +437,20 @@ function PlayerStone({ onPlayerOpenChange, isPlayerOpen, visible }: StoneProps) 
 
   return (
     <group
-      position={[0, 0, 1.0]}
-      scale={1.0}
+      position={STONE_POSITION}
       visible={visible}
-      onClick={(e) => {
-        e.stopPropagation()
+      onClick={(event) => {
+        event.stopPropagation()
         if (!isPlayerOpen && visible) onPlayerOpenChange(true)
       }}
-      onPointerOver={(e) => {
-        e.stopPropagation()
+      onPointerOver={(event) => {
+        event.stopPropagation()
         if (!visible) return
         setHovered(true)
         document.body.style.cursor = 'pointer'
       }}
-      onPointerOut={(e) => {
-        e.stopPropagation()
+      onPointerOut={(event) => {
+        event.stopPropagation()
         setHovered(false)
         document.body.style.cursor = 'default'
       }}
@@ -320,7 +462,7 @@ function PlayerStone({ onPlayerOpenChange, isPlayerOpen, visible }: StoneProps) 
         distance={hovered || isPlayerOpen ? 5 : 2.6}
         decay={2}
       />
-      <Model path={BASE + 'assets/stone_opt.glb'} scale={1.15} highlight={hovered || isPlayerOpen} />
+      <Model path={BASE + 'assets/stone_opt.glb'} scale={STONE_SCALE} highlight={hovered || isPlayerOpen} />
     </group>
   )
 }
@@ -344,7 +486,7 @@ function World(props: SceneProps) {
 export function Scene(props: SceneProps) {
   return (
     <Canvas
-      camera={{ position: [-5.4, 1.25, 3.4], fov: 55, near: 0.08, far: 100 }}
+      camera={{ position: [0, 1.55, 5], fov: 55, near: 0.08, far: 100 }}
       dpr={[1, 1.5]}
       shadows
       gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
