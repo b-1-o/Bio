@@ -1,8 +1,7 @@
-import { Suspense, useMemo, useRef } from 'react'
+import { Suspense, useEffect, useMemo, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Environment } from '@react-three/drei'
 import { MathUtils } from 'three'
-import type { Group } from 'three'
 import { Model } from './Model'
 import { PostFX } from './PostFX'
 import { useScrollProgress } from './useScrollProgress'
@@ -15,15 +14,24 @@ const BASE = import.meta.env.BASE_URL
 /* -------------------------------------------------------------------------- */
 function CameraRig() {
   const progress = useScrollProgress()
-  const { camera } = useThree()
+  const { camera, invalidate } = useThree()
   const target = useRef({ z: 6, y: 1.4, x: 0 })
+
+  // На demand-loop перерисовываем кадр при скролле
+  useEffect(() => {
+    const onScroll = () => invalidate()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+    }
+  }, [invalidate])
 
   useFrame((_, delta) => {
     const p = progress.current
-    // z: 6 → -12 (вглубь)
     target.current.z = MathUtils.lerp(6, -12, p)
     target.current.y = MathUtils.lerp(1.4, 1.0, p)
-    // лёгкое покачивание
     target.current.x = Math.sin(p * Math.PI * 2) * 0.45
 
     camera.position.z = MathUtils.damp(camera.position.z, target.current.z, 0.12, delta)
@@ -48,15 +56,8 @@ function Lighting() {
       />
       <fogExp2 attach="fog" args={['#050505', 0.05]} />
 
-      {/* Лунный свет */}
-      <directionalLight
-        color="#4a6fa5"
-        intensity={1.5}
-        position={[5, 12, 4]}
-      />
-      {/* Мягкий ambient от неба */}
+      <directionalLight color="#4a6fa5" intensity={1.5} position={[5, 12, 4]} />
       <hemisphereLight args={['#1a2838', '#0a0a0c', 0.35]} />
-      {/* Тёплый акцент в глубине (окно/костёр) */}
       <pointLight
         color="#ffaa55"
         intensity={2.2}
@@ -64,7 +65,6 @@ function Lighting() {
         decay={2}
         position={[0, 2.2, -10]}
       />
-      {/* Холодный fill спереди */}
       <pointLight
         color="#6ec8d8"
         intensity={0.6}
@@ -89,22 +89,19 @@ function Ground() {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Стилизованная «изба» из примитивов (центр, z ≈ -10)                        */
+/*  Стилизованная «изба»                                                      */
 /* -------------------------------------------------------------------------- */
 function Cabin() {
   return (
     <group position={[0, -1.2, -10]}>
-      {/* Стены */}
       <mesh position={[0, 1.1, 0]}>
         <boxGeometry args={[3.2, 2.2, 2.6]} />
         <meshStandardMaterial color="#1a1c20" roughness={0.9} metalness={0.05} />
       </mesh>
-      {/* Крыша */}
       <mesh position={[0, 2.55, 0]} rotation={[0, Math.PI / 4, 0]}>
         <coneGeometry args={[2.6, 1.4, 4]} />
         <meshStandardMaterial color="#12141a" roughness={0.85} />
       </mesh>
-      {/* Тёплое «окно» */}
       <mesh position={[0, 1.15, 1.32]}>
         <planeGeometry args={[0.7, 0.55]} />
         <meshStandardMaterial
@@ -123,11 +120,7 @@ function Cabin() {
 /* -------------------------------------------------------------------------- */
 function TreeCorridor({ count }: { count: number }) {
   const trees = useMemo(() => {
-    const list: {
-      pos: [number, number, number]
-      scale: number
-      rot: number
-    }[] = []
+    const list: { pos: [number, number, number]; scale: number; rot: number }[] = []
     const depths = [-3, -6, -9, -12, -15, -18]
     for (let i = 0; i < Math.min(count, depths.length * 2); i++) {
       const side = i % 2 === 0 ? -1 : 1
@@ -155,7 +148,7 @@ function TreeCorridor({ count }: { count: number }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Камни на земле                                                            */
+/*  Камни                                                                     */
 /* -------------------------------------------------------------------------- */
 function Rocks({ dense }: { dense: boolean }) {
   const items = useMemo(() => {
@@ -181,7 +174,7 @@ function Rocks({ dense }: { dense: boolean }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Дальний лес-фон                                                           */
+/*  Дальний лес                                                               */
 /* -------------------------------------------------------------------------- */
 function DistantForest() {
   return (
@@ -196,9 +189,6 @@ function DistantForest() {
   )
 }
 
-/* -------------------------------------------------------------------------- */
-/*  Контент сцены                                                             */
-/* -------------------------------------------------------------------------- */
 function SceneContent({ tier }: { tier: 'low' | 'medium' | 'high' }) {
   const treeCount = tier === 'high' ? 10 : tier === 'medium' ? 6 : 4
   const dense = tier === 'high'
@@ -234,17 +224,6 @@ export function Scene() {
         height: '100vh',
         zIndex: 0,
         pointerEvents: 'none',
-      }}
-      onCreated={({ gl }) => {
-        // demand-mode: перерисовываем при скролле
-        if (isMobile) {
-          const invalidate = () => gl.domElement.dispatchEvent(new Event('webglcontextrestored'))
-          window.addEventListener('scroll', () => {
-            // fiber invalidate через store недоступен здесь напрямую —
-            // demand + scroll progress уже двигает камеру в useFrame
-          }, { passive: true })
-          void invalidate
-        }
       }}
     >
       <Suspense fallback={null}>
