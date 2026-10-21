@@ -29,12 +29,21 @@ export function CameraRig({
   const treeEntryPosition = useMemo(() => new Vector3(0, -15.6, 8), [])
   const treeExitPosition = useMemo(() => new Vector3(4, -15.8, 5), [])
   const caveEntryPosition = useMemo(() => new Vector3(0, -34.2, 5), [])
+  const endOfSpiral = useMemo(() => {
+    const startAngle = Math.atan2(5, 4)
+    return new Vector3(
+      Math.cos(startAngle) * 2.1,
+      -29.8,
+      Math.sin(startAngle) * 2.1,
+    )
+  }, [])
 
   const startLook = useMemo(() => new Vector3(0, 1, 0), [])
   const churchLook = useMemo(() => new Vector3(0, 0.7, 0), [])
   const treeLookStart = useMemo(() => new Vector3(0, -13.8, 0), [])
   const treeLookEnd = useMemo(() => new Vector3(0, -15.5, 0), [])
   const caveLook = useMemo(() => new Vector3(0, -35.1, 0), [])
+  const rootsLook = useMemo(() => new Vector3(0, -26.5, 0), [])
 
   const targetPosition = useMemo(() => new Vector3(), [])
   const targetLook = useMemo(() => new Vector3(0, 1, 0), [])
@@ -67,7 +76,7 @@ export function CameraRig({
       targetPosition.copy(startPosition).lerp(churchPosition, t)
       targetLook.copy(startLook).lerp(churchLook, t)
     } else if (p <= 0.3) {
-      // Fog hides the fast vertical transfer from the forest to the tree zone.
+      // The fog spike conceals the large vertical transfer between worlds.
       const t = segmentProgress(p, 0.2, 0.3)
       targetPosition.copy(churchPosition).lerp(treeEntryPosition, t)
       targetLook.copy(churchLook).lerp(treeLookStart, t)
@@ -77,8 +86,7 @@ export function CameraRig({
       targetLook.copy(treeLookStart).lerp(treeLookEnd, t)
     } else if (p <= 0.8) {
       const t = segmentProgress(p, 0.6, 0.8)
-      const startAngle = Math.atan2(5, 4)
-      const angle = startAngle + t * Math.PI * 4
+      const angle = Math.atan2(5, 4) + t * Math.PI * 4
       const radius = MathUtils.lerp(Math.hypot(4, 5), 2.1, t)
       targetPosition.set(
         Math.cos(angle) * radius,
@@ -88,14 +96,8 @@ export function CameraRig({
       targetLook.set(0, MathUtils.lerp(-18, -26.5, t), 0)
     } else {
       const t = segmentProgress(p, 0.8, 1)
-      const startAngle = Math.atan2(5, 4)
-      const endOfSpiral = new Vector3(
-        Math.cos(startAngle) * 2.1,
-        -29.8,
-        Math.sin(startAngle) * 2.1,
-      )
       targetPosition.copy(endOfSpiral).lerp(caveEntryPosition, t)
-      targetLook.copy(new Vector3(0, -26.5, 0)).lerp(caveLook, t)
+      targetLook.copy(rootsLook).lerp(caveLook, t)
     }
 
     const transitionIn = smooth01((p - 0.2) / 0.04)
