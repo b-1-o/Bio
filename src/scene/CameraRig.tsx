@@ -1,86 +1,93 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
+import { useScroll } from '@react-three/drei'
 import { MathUtils, Vector3 } from 'three'
 
 type CameraRigProps = {
   isPlayerOpen: boolean
+  onScrollStateChange?: (hasScrolled: boolean) => void
 }
 
-type CameraKeyframe = {
-  position: Vector3
-  lookAt: Vector3
+const smooth01 = (value: number) => {
+  const clamped = Math.max(0, Math.min(1, value))
+  return clamped * clamped * (3 - 2 * clamped)
 }
 
-function getScrollProgress() {
-  const scrollRange = document.documentElement.scrollHeight - window.innerHeight
-  return scrollRange > 0
-    ? Math.min(1, Math.max(0, window.scrollY / scrollRange))
-    : 0
-}
-
-const smooth01 = (value: number) => value * value * (3 - 2 * value)
-
-export function CameraRig({ isPlayerOpen }: CameraRigProps) {
+export function CameraRig({
+  isPlayerOpen,
+  onScrollStateChange,
+}: CameraRigProps) {
   const { camera } = useThree()
-  const progressRef = useRef(0)
+  const scroll = useScroll()
 
-  const start = useMemo<CameraKeyframe>(() => ({
-    position: new Vector3(2, 1.5, 10),
-    lookAt: new Vector3(0, 1, 0),
-  }), [])
-
-  const middle = useMemo<CameraKeyframe>(() => ({
-    position: new Vector3(0, 1.2, 5),
-    lookAt: new Vector3(0, 1, 0),
-  }), [])
-
-  const end = useMemo<CameraKeyframe>(() => ({
-    position: new Vector3(0, 1, 2),
-    lookAt: new Vector3(0, 0.9, 0),
-  }), [])
-
+  const startPosition = useMemo(() => new Vector3(0, 1.6, 8), [])
+  const endPosition = useMemo(() => new Vector3(0, 1.2, 1.5), [])
+  const startLookAt = useMemo(() => new Vector3(0, 1, 0), [])
+  const endLookAt = useMemo(() => new Vector3(0, 1, 0), [])
   const targetPosition = useMemo(() => new Vector3(), [])
-  const targetLookAt = useMemo(() => new Vector3(), [])
+  const targetLookAt = useMemo(() => new Vector3(0, 1, 0), [])
   const currentLookAt = useMemo(() => new Vector3(0, 1, 0), [])
 
+  // ScrollControls owns the real scroll element, not window. Listen to both
+  // its element and window so the DOM hint hides for either scrolling method.
   useEffect(() => {
-    const updateProgress = () => {
-      progressRef.current = getScrollProgress()
+    const element = scroll.el
+    if (!element) return
+
+    const updateHint = () => {
+      if (element.scrollTop > 50) onScrollStateChange?.(true)
     }
 
-    updateProgress()
-    window.addEventListener('scroll', updateProgress, { passive: true })
-    window.addEventListener('resize', updateProgress, { passive: true })
+    element.addEventListener('scroll', updateHint, { passive: true })
+    updateHint()
 
-    return () => {
-      window.removeEventListener('scroll', updateProgress)
-      window.removeEventListener('resize', updateProgress)
-    }
-  }, [])
+    return () => element.removeEventListener('scroll', updateHint)
+  }, [scroll.el, onScrollStateChange])
 
   useFrame((_, delta) => {
-    if (isPlayerOpen) {
-      targetPosition.copy(end.position)
-      targetLookAt.copy(end.lookAt)
-    } else {
-      const progress = progressRef.current
+    const progress = isPlayerOpen ? 1 : smooth01(scroll.offset)
 
-      if (progress <= 0.5) {
-        const t = smooth01(progress * 2)
-        targetPosition.copy(start.position).lerp(middle.position, t)
-        targetLookAt.copy(start.lookAt).lerp(middle.lookAt, t)
-      } else {
-        const t = smooth01((progress - 0.5) * 2)
-        targetPosition.copy(middle.position).lerp(end.position, t)
-        targetLookAt.copy(middle.lookAt).lerp(end.lookAt, t)
-      }
-    }
+    targetPosition.copy(startPosition).lerp(endPosition, progress)
+    targetLookAt.copy(startLookAt).lerp(endLookAt, progress)
 
-    camera.position.x = MathUtils.damp(camera.position.x, targetPosition.x, 1.8, delta)
-    camera.position.y = MathUtils.damp(camera.position.y, targetPosition.y, 1.8, delta)
-    camera.position.z = MathUtils.damp(camera.position.z, targetPosition.z, 1.8, delta)
+    camera.position.x = MathUtils.damp(
+      camera.position.x,
+      targetPosition.x,
+      2.4,
+      delta,
+    )
+    camera.position.y = MathUtils.damp(
+      camera.position.y,
+      targetPosition.y,
+      2.4,
+      delta,
+    )
+    camera.position.z = MathUtils.damp(
+      camera.position.z,
+      targetPosition.z,
+      2.4,
+      delta,
+    )
 
-    currentLookAt.lerp(targetLookAt, 1 - Math.exp(-delta * 2.2))
+    currentLookAt.x = MathUtils.damp(
+      currentLookAt.x,
+      targetLookAt.x,
+      3.2,
+      delta,
+    )
+    currentLookAt.y = MathUtils.damp(
+      currentLookAt.y,
+      targetLookAt.y,
+      3.2,
+      delta,
+    )
+    currentLookAt.z = MathUtils.damp(
+      currentLookAt.z,
+      targetLookAt.z,
+      3.2,
+      delta,
+    )
+
     camera.lookAt(currentLookAt)
   })
 
