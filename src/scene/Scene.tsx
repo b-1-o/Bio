@@ -79,10 +79,13 @@ function CameraRig({
   return null
 }
 
+type PlayerStoneProps = {
+  onPlayerOpenChange: (open: boolean) => void
+}
+
 function PlayerStone({
-  isPlayerOpen,
   onPlayerOpenChange,
-}: SceneProps) {
+}: PlayerStoneProps) {
   const [hovered, setHovered] = useState(false)
 
   useEffect(() => {
@@ -176,7 +179,7 @@ function World(props: SceneProps) {
       />
 
       <SocialLinks />
-      <PlayerStone {...props} />
+      <PlayerStone onPlayerOpenChange={props.onPlayerOpenChange} />
     </>
   )
 }
