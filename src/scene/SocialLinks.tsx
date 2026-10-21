@@ -51,10 +51,16 @@ export function SocialLinks({ scale = TREE_SCALE }: { scale?: number }) {
     scene.updateMatrixWorld(true)
     const bounds = new Box3().setFromObject(scene)
     if (bounds.isEmpty()) {
-      return links.map((link, index) => ({
-        ...link,
-        position: [[1.2, 3.4, 0.4], [-1.2, 4.3, 0.4], [1.0, 5.2, 0.4], [-0.8, 6.0, 0.4]][index].map((value) => value * scale) as [number, number, number],
-      }))
+      const fallbackPositions: [number, number, number][] = [
+        [1.2, 3.4, 0.4],
+        [-1.2, 4.3, 0.4],
+        [1.0, 5.2, 0.4],
+        [-0.8, 6.0, 0.4],
+      ]
+      return links.map((link, index) => {
+        const [x, y, z] = fallbackPositions[index]
+        return { ...link, position: [x * scale, y * scale, z * scale] }
+      })
     }
 
     const size = bounds.getSize(new Vector3())
