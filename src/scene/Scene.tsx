@@ -197,6 +197,10 @@ function FogController() {
       const t = (p - 0.36) / 0.1
       near = MathUtils.lerp(7, 0.05, t)
       far = MathUtils.lerp(34, 0.7, t)
+    } else if (p < 0.49) {
+      const t = MathUtils.clamp((p - 0.46) / 0.03, 0, 1)
+      near = MathUtils.lerp(0.05, 3.5, t)
+      far = MathUtils.lerp(0.7, 20, t)
     } else if (p < 0.70) {
       near = 3.5
       far = 20
