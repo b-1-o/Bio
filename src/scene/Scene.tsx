@@ -107,9 +107,10 @@ function sample(keys: Key[], progress: number) {
   }
 }
 
-function cameraAt(progress: number) {
-  if (progress < 0.36) return sample(HOME, progress / 0.36)
-  if (progress < 0.46) return sample(HOME, 1)
+function cameraAt(progress: number, eye: number, forestSize: Vector3) {
+  const home = homeKeys(eye, forestSize)
+  if (progress < 0.36) return sample(home, progress / 0.36)
+  if (progress < 0.46) return sample(home, 1)
   if (progress < 0.70) return sample(SOCIALS, (progress - 0.46) / 0.24)
   if (progress < 0.84) return sample(ROOTS, (progress - 0.70) / 0.14)
   return sample(PLAYER, (progress - 0.84) / 0.16)
@@ -191,15 +192,15 @@ function FogController() {
       far = 34
     } else if (p < 0.46) {
       const t = (p - 0.36) / 0.1
-      near = MathUtils.lerp(7, 0.6, t)
-      far = MathUtils.lerp(34, 4, t)
+      near = MathUtils.lerp(7, 0.05, t)
+      far = MathUtils.lerp(34, 0.7, t)
     } else if (p < 0.70) {
       near = 3.5
       far = 20
     } else if (p < 0.84) {
       const t = (p - 0.70) / 0.14
-      near = MathUtils.lerp(3, 0.5, t)
-      far = MathUtils.lerp(16, 3.5, t)
+      near = MathUtils.lerp(2.8, 0.05, t)
+      far = MathUtils.lerp(22, 0.7, t)
     } else {
       const t = (p - 0.84) / 0.16
       near = MathUtils.lerp(1.2, 4.5, t)
@@ -221,7 +222,7 @@ function PhaseModels({
   isPlayerOpen: boolean
   onPlayerOpenChange: (v: boolean) => void
 }) {
-  const { scene: forestSource } = useGLTF(BASE + 'assets/forest.glb')\n  const homeRef = useRef<Group>(null)
+  const homeRef = useRef<Group>(null)
   const treeRef = useRef<Group>(null)
   const stoneVisible = useRef(false)
   const [showStone, setShowStone] = useState(false)
@@ -231,8 +232,8 @@ function PhaseModels({
     const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight)
     const p = MathUtils.clamp(window.scrollY / max, 0, 1)
 
-    if (homeRef.current) homeRef.current.visible = p < 0.42
-    if (treeRef.current) treeRef.current.visible = p >= 0.40 && p < 0.88
+    if (homeRef.current) homeRef.current.visible = p < 0.46
+    if (treeRef.current) treeRef.current.visible = p >= 0.46 && p < 0.84
 
     const social = p >= 0.46 && p < 0.72
     if (social !== showSocials) setShowSocials(social)
