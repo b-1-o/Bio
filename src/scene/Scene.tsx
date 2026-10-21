@@ -45,14 +45,19 @@ function measureForest(scene: Object3D) {
 }
 
 // HOME: strictly eye-level walk, constant height, looking forward at the church
-function homeKeys(eye: number): Key[] {
+function homeKeys(eye: number, size: Vector3): Key[] {
+  // The route is scaled to the measured, grounded forest bounds. Front is +Z.
+  const w = Math.max(size.x, 1)
+  const d = Math.max(size.z, 1)
+  const x = (fraction: number) => (fraction - 0.5) * w
+  const z = (fraction: number) => (fraction - 0.5) * d
   return [
-    { t: 0.0, pos: [-5.4, eye, 3.4], look: [-0.8, eye, -1.0] },
-    { t: 0.2, pos: [-3.6, eye, 4.2], look: [0.0, eye, -1.6] },
-    { t: 0.4, pos: [-1.4, eye, 4.9], look: [0.3, eye, -2.0] },
-    { t: 0.6, pos: [0.8, eye, 5.1], look: [0.5, eye, -2.4] },
-    { t: 0.8, pos: [2.9, eye, 4.4], look: [0.7, eye, -2.7] },
-    { t: 1.0, pos: [4.2, eye, 3.2], look: [0.9, eye, -2.9] },
+    { t: 0.0, pos: [x(0.20), eye, z(0.83)], look: [x(0.43), eye, z(0.30)] },
+    { t: 0.2, pos: [x(0.29), eye, z(0.88)], look: [x(0.48), eye, z(0.25)] },
+    { t: 0.4, pos: [x(0.39), eye, z(0.91)], look: [x(0.50), eye, z(0.22)] },
+    { t: 0.6, pos: [x(0.52), eye, z(0.92)], look: [x(0.52), eye, z(0.19)] },
+    { t: 0.8, pos: [x(0.65), eye, z(0.87)], look: [x(0.53), eye, z(0.16)] },
+    { t: 1.0, pos: [x(0.74), eye, z(0.79)], look: [x(0.54), eye, z(0.13)] },
   ]
 }
 
