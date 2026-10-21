@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react'
 import { useGLTF } from '@react-three/drei'
 import type { ThreeElements } from '@react-three/fiber'
-import type { Color, Material, Mesh } from 'three'
+import type { Color, Material, Mesh, Object3D } from 'three'
 
 const BASE = import.meta.env.BASE_URL
 
@@ -17,7 +17,7 @@ type EmissiveMaterial = Material & {
   emissiveIntensity?: number
 }
 
-function cloneWithMaterials(scene: ReturnType<typeof useGLTF>['scene']) {
+function cloneWithMaterials(scene: Object3D) {
   const clone = scene.clone(true)
   clone.traverse((object) => {
     const mesh = object as Mesh
