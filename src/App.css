@@ -1,10 +1,12 @@
 :root {
-  --fg: #c8d0d8;
-  --muted: rgba(180, 195, 210, 0.45);
-  --bg: #050505;
-  --cyan: #6ec8d8;
-  --serif: Georgia, 'Times New Roman', serif;
-  --sans: Inter, ui-sans-serif, system-ui, sans-serif;
+  color-scheme: dark;
+  background: #050505;
+  color: #e6e8eb;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 * {
@@ -15,140 +17,80 @@ html,
 body,
 #root {
   width: 100%;
+  min-width: 100%;
   min-height: 100%;
-  background: var(--bg);
+  margin: 0;
+  background: #050505;
 }
 
 body {
-  margin: 0;
-  color: var(--fg);
-  font-family: var(--sans);
-  -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-/* Высота для скролл-камеры */
 .app {
   position: relative;
   width: 100%;
+  height: 300vh;
   min-height: 300vh;
-  background: var(--bg);
+  background: #050505;
 }
 
-/* Фиксированный UI поверх Canvas */
 .overlay {
   position: fixed;
   inset: 0;
-  z-index: 2;
-  pointer-events: none;
+  z-index: 10;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: 12vh 24px 8vh;
-}
-
-.hero {
-  text-align: center;
+  padding: 11vh 24px 7vh;
+  pointer-events: none;
+  user-select: none;
 }
 
 .hero-title {
   margin: 0;
-  font-family: var(--serif);
-  font-size: clamp(42px, 8vw, 72px);
+  color: #e6e8eb;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2.5rem, 7vw, 5rem);
   font-weight: 400;
-  letter-spacing: 0.18em;
-  color: #e8eef4;
-  text-shadow: 0 0 40px rgba(110, 200, 216, 0.15);
-}
-
-.hero-sub {
-  margin: 14px 0 0;
-  font-size: 10px;
-  letter-spacing: 0.42em;
-  text-transform: uppercase;
-  color: var(--muted);
+  letter-spacing: 0.19em;
+  line-height: 1;
+  text-indent: 0.19em;
+  text-shadow: 0 0 42px rgba(106, 143, 192, 0.13);
 }
 
 .scroll-hint {
   margin: 0;
-  font-size: 11px;
+  color: rgba(207, 215, 224, 0.62);
+  font-size: 0.65rem;
+  font-weight: 400;
   letter-spacing: 0.28em;
+  line-height: 1.5;
+  text-align: center;
   text-transform: uppercase;
-  color: var(--muted);
-  animation: hintPulse 2.8s ease-in-out infinite;
-}
-
-@keyframes hintPulse {
-  0%,
-  100% {
-    opacity: 0.35;
-  }
-  50% {
-    opacity: 0.85;
-  }
-}
-
-/* Нижний блок после скролла */
-.end {
-  position: relative;
-  z-index: 2;
-  min-height: 40vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 28px;
-  padding: 48px 24px;
-  background: linear-gradient(180deg, transparent, rgba(5, 5, 5, 0.92) 40%);
-}
-
-.end-mark {
-  margin: 0;
-  font-family: var(--serif);
-  font-size: 22px;
-  letter-spacing: 0.2em;
-  color: rgba(200, 210, 220, 0.55);
-}
-
-.end-links {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 18px 28px;
-}
-
-.end-links a {
-  font-size: 11px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: rgba(180, 195, 210, 0.5);
-  transition: color 0.25s ease;
-  pointer-events: auto;
-}
-
-.end-links a:hover {
-  color: var(--cyan);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .scroll-hint {
-    animation: none;
-    opacity: 0.6;
-  }
 }
 
 @media (max-width: 640px) {
   .overlay {
-    padding: 10vh 16px 7vh;
+    padding: 10vh 16px 6vh;
   }
 
   .hero-title {
     letter-spacing: 0.14em;
+    text-indent: 0.14em;
+  }
+
+  .scroll-hint {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
   }
 }
