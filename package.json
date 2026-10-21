@@ -3,7 +3,28 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "scripts": { "dev": "vite", "build": "tsc -b && vite build", "lint": "oxlint", "preview": "vite preview" },
-  "dependencies": { "react": "^19.2.8", "react-dom": "^19.2.8", "framer-motion": "^11.0.0" },
-  "devDependencies": { "@types/node": "^24.13.3", "@types/react": "^19.2.18", "@types/react-dom": "^19.2.4", "@vitejs/plugin-react": "^6.1.0", "oxlint": "^1.79.0", "typescript": "~6.0.2", "vite": "^8.2.2" }
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "oxlint",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@react-three/drei": "^10.7.9",
+    "@react-three/fiber": "^9.8.2",
+    "framer-motion": "^11.0.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@types/three": "^0.186.0",
+    "@vitejs/plugin-react": "^6.1.0",
+    "oxlint": "^1.79.0",
+    "typescript": "~6.0.2",
+    "vite": "^8.2.2"
+  }
 }

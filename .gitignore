@@ -1,0 +1,16 @@
+public/assets/forest.glb
+public/assets/tree.glb
+public/assets/rocks.glb
+public/assets/stone.glb
+public/assets/3D_stone_11.blend
+node_modules/
+dist/
+*.log
+.DS_Store
+
+# Оригиналы 3D-ассетов (используются только оптимизированные *_web/*_opt)
+public/assets/forest.glb
+public/assets/tree.glb
+public/assets/rocks.glb
+public/assets/stone.glb
+public/assets/3D_stone_11.blend
