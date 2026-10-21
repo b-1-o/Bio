@@ -1,13 +1,16 @@
-import { useEffect, useState } from 'react'
-import { type ThreeEvent } from '@react-three/fiber'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
+import { MathUtils, Vector3 } from 'three'
 import { Model } from './Model'
 import { SocialLinks } from './SocialLinks'
+import { PostFX } from './PostFX'
 
 const BASE = import.meta.env.BASE_URL
 
 type SceneProps = {
   isPlayerOpen: boolean
   onPlayerOpenChange: (open: boolean) => void
+  onScrollStateChange?: (scrolled: boolean) => void
 }
 
 type Placement = {
@@ -17,21 +20,58 @@ type Placement = {
   rotation: number
 }
 
-const forestRocks: Placement[] = [
-  { id: 'forest-rock-west-front', position: [-5.5, 0, 2], scale: 0.85, rotation: 0.35 },
-  { id: 'forest-rock-east-front', position: [5.4, 0, 2.5], scale: 0.9, rotation: -0.4 },
-  { id: 'forest-rock-west-back', position: [-5.8, 0, -6.5], scale: 0.92, rotation: 1.1 },
-  { id: 'forest-rock-east-back', position: [5.7, 0, -6], scale: 0.88, rotation: -0.8 },
+const rocks: Placement[] = [
+  { id: 'rock-west-front', position: [-5, 0, 2], scale: 0.8, rotation: 0.35 },
+  { id: 'rock-east-front', position: [5, 0, 2.5], scale: 0.85, rotation: -0.4 },
+  { id: 'rock-west-back', position: [-5.5, 0, -3.5], scale: 0.9, rotation: 1.1 },
+  { id: 'rock-east-back', position: [5.5, 0, -4], scale: 0.88, rotation: -0.8 },
 ]
 
-const caveRocks: Placement[] = [
-  { id: 'cave-rock-west', position: [-3.6, 0, 0.1], scale: 0.86, rotation: 0.2 },
-  { id: 'cave-rock-east', position: [3.5, 0, -0.4], scale: 0.92, rotation: -0.6 },
-  { id: 'cave-rock-back-west', position: [-2.6, 0, -3.8], scale: 0.8, rotation: 1.05 },
-  { id: 'cave-rock-back-east', position: [2.5, 0, -3.5], scale: 0.82, rotation: -1.1 },
-]
+function CameraRig({
+  isPlayerOpen,
+  onScrollStateChange,
+}: SceneProps) {
+  const { camera } = useThree()
+  const lastScrolled = useRef(false)
+  const currentLookAt = useMemo(() => new Vector3(0, 0, 0), [])
+  const targetLookAt = useMemo(() => new Vector3(0, 0, 0), [])
 
-function CentralStone({
+  useFrame((_, delta) => {
+    const scrollRange = Math.max(
+      1,
+      document.documentElement.scrollHeight - window.innerHeight,
+    )
+    const scrollProgress = MathUtils.clamp(window.scrollY / scrollRange, 0, 1)
+
+    if (scrollProgress > 0.05 !== lastScrolled.current) {
+      lastScrolled.current = scrollProgress > 0.05
+      onScrollStateChange?.(lastScrolled.current)
+    }
+
+    const progress = scrollProgress
+    const targetY = MathUtils.lerp(15, 1.5, progress)
+    const targetZ = MathUtils.lerp(15, 5, progress)
+
+    targetLookAt.set(
+      0,
+      MathUtils.lerp(0, 1, progress),
+      MathUtils.lerp(0, 2, progress),
+    )
+
+    camera.position.x = 0
+    camera.position.y = MathUtils.damp(camera.position.y, targetY, 2.6, delta)
+    camera.position.z = MathUtils.damp(camera.position.z, targetZ, 2.6, delta)
+
+    currentLookAt.x = MathUtils.damp(currentLookAt.x, targetLookAt.x, 3.2, delta)
+    currentLookAt.y = MathUtils.damp(currentLookAt.y, targetLookAt.y, 3.2, delta)
+    currentLookAt.z = MathUtils.damp(currentLookAt.z, targetLookAt.z, 3.2, delta)
+    camera.lookAt(currentLookAt)
+  })
+
+  return null
+}
+
+function PlayerStone({
   isPlayerOpen,
   onPlayerOpenChange,
 }: SceneProps) {
@@ -62,19 +102,20 @@ function CentralStone({
 
   return (
     <group
+      position={[0, 0, 2]}
       onClick={handleClick}
       onPointerOver={handlePointerOver}
       onPointerOut={handlePointerOut}
     >
       <pointLight
-        position={[0, 2.35, 0.25]}
-        color="#91e5ff"
-        intensity={hovered ? 4 : 2.1}
-        distance={hovered ? 8 : 5.5}
+        position={[0, 1.8, 0.1]}
+        color="#888"
+        intensity={hovered ? 1.4 : 0.65}
+        distance={hovered ? 5 : 3.5}
         decay={2}
       />
       <Model
-        path={`${BASE}assets/stone_opt.glb`}
+        path={BASE + 'assets/stone_opt.glb'}
         scale={1.5}
         highlight={hovered}
       />
@@ -82,117 +123,88 @@ function CentralStone({
   )
 }
 
-function CaveZone({
-  isPlayerOpen,
-  onPlayerOpenChange,
-}: SceneProps) {
+function World(props: SceneProps) {
   return (
-    <group position={[0, -8, -15]}>
-      <mesh
-        position={[0, -0.08, 0]}
-        rotation={[-Math.PI / 2, 0, 0]}
-        receiveShadow
-      >
-        <circleGeometry args={[8.5, 96]} />
-        <meshStandardMaterial
-          color="#04090e"
-          roughness={0.98}
-          metalness={0.08}
-        />
-      </mesh>
+    <>
+      <color attach="background" args={['#000']} />
+      <fog attach="fog" args={['#000', 10, 48]} />
 
-      {caveRocks.map((rock) => (
+      <ambientLight intensity={0.1} color="#888" />
+      <directionalLight
+        intensity={1.5}
+        color="#aaaaaa"
+        position={[5, 10, 5]}
+        castShadow
+      />
+
+      {/* Original full-resolution forest asset; no compressed forest substitute. */}
+      <group position={[0, 0, 0]} scale={2}>
+        <Model path={BASE + 'assets/forest.glb'} />
+      </group>
+
+      {rocks.map((rock) => (
         <group
           key={rock.id}
           position={rock.position}
           scale={rock.scale}
           rotation={[0, rock.rotation, 0]}
         >
-          <Model path={`${BASE}assets/rocks_web.glb`} />
+          <Model path={BASE + 'assets/rocks_web.glb'} />
         </group>
       ))}
 
-      <pointLight
-        position={[-3, 1.2, 0.5]}
-        color="#248dc4"
-        intensity={3.4}
-        distance={12}
-        decay={2}
-      />
-      <pointLight
-        position={[3.5, 1.8, -3]}
-        color="#3168a8"
-        intensity={2.7}
-        distance={10}
-        decay={2}
-      />
-      <pointLight
-        position={[0, 2.7, 0.3]}
-        color="#9beaff"
-        intensity={1.6}
-        distance={6}
-        decay={2}
+      {/* Dead tree stays in the background with a measured grounded origin. */}
+      <group position={[0, 0, -5]} scale={2}>
+        <Model path={BASE + 'assets/tree_web.glb'} />
+      </group>
+
+      <spotLight
+        position={[0, 5, -2]}
+        intensity={2}
+        color="#888"
+        angle={0.7}
+        penumbra={1}
+        castShadow
       />
 
-      <CentralStone
-        isPlayerOpen={isPlayerOpen}
-        onPlayerOpenChange={onPlayerOpenChange}
-      />
-    </group>
+      <SocialLinks />
+      <PlayerStone {...props} />
+    </>
   )
 }
 
 export function Scene(props: SceneProps) {
   return (
-    <>
-      <color attach="background" args={['#020509']} />
-
-      <ambientLight color="#1a1a2e" intensity={0.15} />
-
-      <directionalLight
-        color="#8dc9ec"
-        intensity={0.62}
-        position={[-7, 12, 7]}
-      />
-
-      {/* The original 12 MB forest asset is the only forest ground model. */}
-      <group position={[0, 0, 0]} scale={2}>
-        <Model path={`${BASE}assets/forest.glb`} />
-      </group>
-
-      {forestRocks.map((rock) => (
-        <group
-          key={rock.id}
-          position={rock.position}
-          scale={rock.scale}
-          rotation={[0, rock.rotation, 0]}
-        >
-          <Model path={`${BASE}assets/rocks_web.glb`} />
-        </group>
-      ))}
-
-      {/* Zone 3: dead tree. Model.tsx grounds it before scaling/placement. */}
-      <group position={[0, 0, -2]} scale={3}>
-        <Model path={`${BASE}assets/tree_web.glb`} />
-      </group>
-
-      <spotLight
-        position={[0, 5, 5]}
-        intensity={5}
-        color="#88bbff"
-        angle={0.62}
-        penumbra={0.9}
-        castShadow
-        shadow-mapSize={[1024, 1024]}
-      />
-
-      <SocialLinks />
-
-      {/* Zone 5 is a separate world-space pocket beneath and behind the forest. */}
-      <CaveZone
-        isPlayerOpen={props.isPlayerOpen}
-        onPlayerOpenChange={props.onPlayerOpenChange}
-      />
-    </>
+    <Canvas
+      camera={{
+        position: [0, 15, 15],
+        fov: 50,
+        near: 0.1,
+        far: 180,
+      }}
+      dpr={[1, 1.5]}
+      shadows
+      gl={{
+        antialias: true,
+        alpha: false,
+        powerPreference: 'high-performance',
+      }}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        width: '100%',
+        height: '100%',
+        zIndex: 0,
+        pointerEvents: 'auto',
+        touchAction: 'pan-y',
+        filter: 'grayscale(1)',
+      }}
+    >
+      <Suspense fallback={null}>
+        <World {...props} />
+        <CameraRig {...props} />
+        <PostFX />
+      </Suspense>
+    </Canvas>
   )
 }

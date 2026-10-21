@@ -5,13 +5,8 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: #020509;
-  color: #e6edf7;
-  --ice: #c9f1ff;
-  --ice-bright: #92e2ff;
-  --steel: #8eabc9;
-  --muted: rgba(190, 207, 229, 0.58);
-  --glass: rgba(6, 13, 22, 0.78);
+  background: #000;
+  color: #fff;
 }
 
 *,
@@ -25,19 +20,20 @@ body,
 #root {
   width: 100%;
   min-width: 320px;
-  height: 100%;
+  min-height: 100%;
   margin: 0;
-  background: #020509;
+  background: #000;
 }
 
 html,
 body {
-  overflow: hidden;
-  overscroll-behavior: none;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: none;
 }
 
 body {
-  min-height: 100%;
+  min-height: 100vh;
 }
 
 button,
@@ -49,27 +45,14 @@ button {
   font: inherit;
 }
 
-a {
-  color: inherit;
-}
-
-::selection {
-  color: #06101a;
-  background: #a8e8ff;
-}
-
-/*
- * The document remains 500vh tall as requested. ScrollControls owns the
- * interactive scroll area inside the fixed Canvas, avoiding double scrolling.
- */
 .app {
   position: relative;
   width: 100%;
-  height: 500vh;
-  min-height: 500vh;
+  height: 300vh;
+  min-height: 300vh;
   isolation: isolate;
   overflow: visible;
-  background: #020509;
+  background: #000;
 }
 
 .scene-wordmark {
@@ -86,14 +69,14 @@ a {
 }
 
 .scene-wordmark__name {
-  color: rgba(230, 241, 252, 0.92);
+  color: #fff;
   font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
   font-size: clamp(2.1rem, 5.4vw, 4.3rem);
   font-weight: 400;
   letter-spacing: 0.25em;
   line-height: 1;
   text-indent: 0.25em;
-  text-shadow: 0 0 30px rgba(107, 169, 220, 0.18);
+  text-shadow: 0 0 26px rgba(255, 255, 255, 0.12);
   opacity: 1;
   transform: translate3d(0, 0, 0);
   transition:
@@ -107,7 +90,7 @@ a {
 }
 
 .scene-wordmark__hint {
-  color: var(--muted);
+  color: #888;
   font-size: 0.64rem;
   font-weight: 500;
   letter-spacing: 0.25em;
@@ -124,100 +107,60 @@ a {
 }
 
 @keyframes hint-breathe {
-  0%,
-  100% {
-    opacity: 0.42;
-    transform: translateY(0);
-  }
-  50% {
-    opacity: 0.88;
-    transform: translateY(-4px);
-  }
+  0%, 100% { opacity: 0.42; transform: translateY(0); }
+  50% { opacity: 0.88; transform: translateY(-4px); }
 }
 
-/* Glowing social links attached to branches through drei's <Html>. */
+/* Monochrome social controls positioned in 3D with drei's Html. */
 .social-orb {
   position: relative;
   display: grid;
-  width: 54px;
-  height: 54px;
+  width: 50px;
+  height: 50px;
   place-items: center;
-  border: 1px solid rgba(171, 230, 255, 0.76);
+  border: 1px solid #fff;
   border-radius: 50%;
-  color: #e6f8ff;
-  background:
-    radial-gradient(circle at 34% 24%, rgba(157, 232, 255, 0.5), transparent 43%),
-    radial-gradient(circle at 50% 55%, rgba(31, 78, 107, 0.88), rgba(4, 13, 22, 0.96) 74%);
+  color: #fff;
+  background: #222;
   box-shadow:
-    0 0 12px rgba(102, 208, 255, 0.5),
-    0 0 34px rgba(65, 160, 220, 0.24),
-    inset 0 0 13px rgba(159, 227, 255, 0.2);
+    0 0 0 4px rgba(255, 255, 255, 0.035),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
   text-decoration: none;
   cursor: pointer;
   user-select: none;
-  -webkit-user-drag: none;
   transform: translateZ(0);
-  transition:
-    transform 240ms cubic-bezier(0.2, 0.75, 0.2, 1),
-    box-shadow 240ms ease,
-    border-color 240ms ease,
-    background-color 240ms ease;
-}
-
-.social-orb::before,
-.social-orb::after {
-  position: absolute;
-  inset: -7px;
-  border: 1px solid rgba(115, 211, 249, 0.23);
-  border-radius: inherit;
-  content: "";
-  pointer-events: none;
-}
-
-.social-orb::before {
-  animation: orb-pulse 2.8s ease-in-out infinite;
-}
-
-.social-orb::after {
-  inset: -13px;
-  border-color: rgba(106, 191, 233, 0.11);
+  transition: background 200ms ease, color 200ms ease, transform 200ms ease;
 }
 
 .social-orb:hover,
 .social-orb:focus-visible {
-  z-index: 1;
   outline: none;
-  border-color: #e0f8ff;
-  box-shadow:
-    0 0 17px rgba(115, 221, 255, 0.78),
-    0 0 46px rgba(57, 166, 226, 0.34),
-    inset 0 0 15px rgba(179, 239, 255, 0.28);
-  transform: scale(1.09);
+  color: #000;
+  background: #fff;
+  transform: scale(1.07);
 }
 
 .social-orb:focus-visible {
-  outline: 2px solid var(--ice);
-  outline-offset: 7px;
+  outline: 2px solid #fff;
+  outline-offset: 6px;
 }
 
 .social-orb__core {
-  font-size: 0.79rem;
+  font-size: 0.85rem;
   font-weight: 700;
-  letter-spacing: 0.035em;
+  letter-spacing: 0.02em;
 }
 
 .social-orb__label {
   position: absolute;
-  top: calc(100% + 12px);
+  top: calc(100% + 10px);
   left: 50%;
-  padding: 6px 10px;
-  border: 1px solid rgba(140, 207, 236, 0.24);
+  padding: 5px 9px;
+  border: 1px solid #888;
   border-radius: 999px;
-  color: rgba(228, 246, 255, 0.92);
-  background: rgba(3, 9, 16, 0.9);
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
-  font-size: 0.64rem;
-  font-weight: 500;
+  color: #fff;
+  background: #111;
+  font-size: 0.62rem;
   letter-spacing: 0.1em;
   white-space: nowrap;
   opacity: 0;
@@ -232,34 +175,16 @@ a {
   transform: translate(-50%, 0);
 }
 
-@keyframes orb-pulse {
-  0%,
-  100% {
-    opacity: 0.28;
-    transform: scale(0.96);
-  }
-  50% {
-    opacity: 0.78;
-    transform: scale(1.055);
-  }
-}
-
-/* Lightweight interaction label above the clickable stone. */
 .stone-prompt {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: 31px;
   padding: 8px 12px;
-  border: 1px solid rgba(155, 224, 250, 0.36);
+  border: 1px solid #888;
   border-radius: 999px;
-  color: rgba(226, 246, 255, 0.9);
-  background: rgba(3, 10, 17, 0.76);
-  box-shadow:
-    0 0 24px rgba(69, 163, 211, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
+  color: #fff;
+  background: #111;
   font-size: 0.58rem;
   font-weight: 600;
   letter-spacing: 0.18em;
@@ -267,35 +192,36 @@ a {
   pointer-events: none;
 }
 
-/* Keep the audio player above the WebGL canvas and use only cool glass tones. */
+/* Glass player: neutral black, charcoal, ash and white only. */
 .player-backdrop {
   z-index: 20;
-  background: rgba(2, 5, 10, 0.54);
-  -webkit-backdrop-filter: blur(14px) saturate(75%);
-  backdrop-filter: blur(14px) saturate(75%);
+  background: rgba(0, 0, 0, 0.78);
+  -webkit-backdrop-filter: blur(14px) saturate(0%);
+  backdrop-filter: blur(14px) saturate(0%);
 }
 
 .player-panel {
-  border-color: rgba(184, 213, 240, 0.2);
-  color: #e9f4ff;
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
   background:
-    radial-gradient(ellipse at 50% 0%, rgba(81, 133, 176, 0.2), transparent 50%),
-    linear-gradient(145deg, rgba(19, 29, 42, 0.92), rgba(5, 9, 15, 0.96) 72%);
+    radial-gradient(ellipse at 50% 0%, rgba(136, 136, 136, 0.14), transparent 50%),
+    linear-gradient(145deg, rgba(34, 34, 34, 0.96), rgba(0, 0, 0, 0.98) 72%);
   box-shadow:
-    0 32px 100px rgba(0, 0, 0, 0.56),
-    0 0 64px rgba(56, 129, 174, 0.1),
+    0 32px 100px rgba(0, 0, 0, 0.75),
+    0 0 48px rgba(255, 255, 255, 0.035),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  -webkit-backdrop-filter: blur(28px) saturate(118%);
-  backdrop-filter: blur(28px) saturate(118%);
+  -webkit-backdrop-filter: blur(28px) saturate(0%);
+  backdrop-filter: blur(28px) saturate(0%);
 }
 
 .player-play-button {
-  color: #06111a;
-  background: linear-gradient(145deg, #e3f6ff, #91bdd9);
+  color: #000;
+  background: #fff;
 }
 
 .player-play-button:hover {
-  background: linear-gradient(145deg, #f1fbff, #b1d9ef);
+  color: #000;
+  background: #888;
 }
 
 @media (max-width: 600px) {
@@ -315,20 +241,13 @@ a {
   }
 
   .social-orb {
-    width: 46px;
-    height: 46px;
-  }
-
-  .social-orb__label {
-    top: calc(100% + 9px);
-    font-size: 0.6rem;
+    width: 44px;
+    height: 44px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

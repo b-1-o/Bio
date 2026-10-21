@@ -16,15 +16,7 @@ const links: SocialLink[] = [
     username: '@psycho_b1o',
     href: 'https://www.tiktok.com/@psycho_b1o',
     glyph: '♪',
-    position: [2.05, 3.9, -0.85],
-  },
-  {
-    id: 'instagram',
-    label: 'Instagram',
-    username: '@__._saint',
-    href: 'https://www.instagram.com/__._saint',
-    glyph: '◎',
-    position: [-2.05, 5.8, -1.05],
+    position: [1.45, 2.25, -4.55],
   },
   {
     id: 'github',
@@ -32,7 +24,15 @@ const links: SocialLink[] = [
     username: 'b-1-o',
     href: 'https://github.com/b-1-o',
     glyph: '⌘',
-    position: [1.85, 7.8, -1.15],
+    position: [-1.4, 3.45, -5.15],
+  },
+  {
+    id: 'instagram',
+    label: 'Instagram',
+    username: '@__._saint',
+    href: 'https://www.instagram.com/__._saint',
+    glyph: '◎',
+    position: [1.5, 4.7, -5.2],
   },
   {
     id: 'discord',
@@ -40,7 +40,7 @@ const links: SocialLink[] = [
     username: 'psycho_b1o',
     href: 'https://discord.gg/P9aqyGCSG',
     glyph: '◌',
-    position: [-1.55, 9.55, -1.25],
+    position: [-1.15, 5.8, -5.1],
   },
 ]
 
@@ -49,29 +49,17 @@ export function SocialLinks() {
     <group>
       {links.map((link) => (
         <group key={link.id}>
-          {/* Emissive geometry catches Bloom; the HTML anchor handles navigation. */}
           <mesh position={link.position}>
-            <sphereGeometry args={[0.16, 28, 28]} />
+            <sphereGeometry args={[0.18, 24, 24]} />
             <meshStandardMaterial
-              color="#c4f1ff"
-              emissive="#65d7ff"
-              emissiveIntensity={3.2}
-              roughness={0.18}
+              color="#333"
+              roughness={0.42}
               metalness={0.08}
-              toneMapped={false}
             />
           </mesh>
 
-          <pointLight
-            position={link.position}
-            color="#72dfff"
-            intensity={1.2}
-            distance={4.5}
-            decay={2}
-          />
-
           <Html
-            position={[link.position[0], link.position[1], link.position[2] + 0.08]}
+            position={[link.position[0], link.position[1], link.position[2] + 0.1]}
             center
             zIndexRange={[30, 0]}
           >
@@ -80,8 +68,8 @@ export function SocialLinks() {
               href={link.href}
               target="_blank"
               rel="noreferrer"
-              aria-label={`Open ${link.label}: ${link.username}`}
-              title={`${link.label} · ${link.username}`}
+              aria-label={'Open ' + link.label + ': ' + link.username}
+              title={link.label + ' · ' + link.username}
               onClick={(event) => event.stopPropagation()}
               draggable={false}
             >

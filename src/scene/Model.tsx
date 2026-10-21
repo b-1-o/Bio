@@ -15,7 +15,7 @@ import {
 
 const BASE = import.meta.env.BASE_URL
 
-useGLTF.setDecoderPath(`${BASE}draco/`)
+useGLTF.setDecoderPath(BASE + 'draco/')
 
 type ModelProps = ThreeElements['group'] & {
   path: string
@@ -59,7 +59,6 @@ function configureTextureQuality(scene: Object3D, anisotropy: number) {
         texture.magFilter = LinearFilter
         texture.generateMipmaps = true
 
-        // Only color maps are sRGB; numeric material maps stay linear data.
         if (COLOR_TEXTURE_FIELDS.has(field)) {
           texture.colorSpace = SRGBColorSpace
         }
@@ -70,7 +69,6 @@ function configureTextureQuality(scene: Object3D, anisotropy: number) {
   })
 }
 
-/** Clone per-instance materials and align the measured lowest point to y=0. */
 function cloneAndGround(scene: Object3D) {
   const clone = scene.clone(true)
 
@@ -96,7 +94,6 @@ export function Model({ path, highlight = false, ...props }: ModelProps) {
   const { gl } = useThree()
 
   const groundedScene = useMemo(() => {
-    // Use the hardware limit when below 16; otherwise use requested 16x anisotropy.
     const anisotropy = Math.min(16, gl.capabilities.getMaxAnisotropy())
     configureTextureQuality(scene, anisotropy)
     return cloneAndGround(scene)
@@ -121,8 +118,8 @@ export function Model({ path, highlight = false, ...props }: ModelProps) {
         const previousIntensity = emissiveMaterial.emissiveIntensity ?? 1
 
         if (highlight) {
-          emissiveMaterial.emissive.set('#264d70')
-          emissiveMaterial.emissiveIntensity = Math.max(previousIntensity, 0.75)
+          emissiveMaterial.emissive.set('#888')
+          emissiveMaterial.emissiveIntensity = Math.max(previousIntensity, 0.35)
         } else {
           emissiveMaterial.emissive.copy(previousColor)
           emissiveMaterial.emissiveIntensity = previousIntensity
@@ -141,7 +138,7 @@ export function Model({ path, highlight = false, ...props }: ModelProps) {
   return <primitive object={groundedScene} {...props} dispose={null} />
 }
 
-useGLTF.preload(`${BASE}assets/forest.glb`)
-useGLTF.preload(`${BASE}assets/stone_opt.glb`)
-useGLTF.preload(`${BASE}assets/rocks_web.glb`)
-useGLTF.preload(`${BASE}assets/tree_web.glb`)
+useGLTF.preload(BASE + 'assets/forest.glb')
+useGLTF.preload(BASE + 'assets/stone_opt.glb')
+useGLTF.preload(BASE + 'assets/rocks_web.glb')
+useGLTF.preload(BASE + 'assets/tree_web.glb')
