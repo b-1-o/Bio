@@ -1,18 +1,20 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useScroll } from '@react-three/drei'
 import { FogExp2, MathUtils, Vector3 } from 'three'
 
 type CameraRigProps = {
   isPlayerOpen: boolean
-  onScrollStateChange?: (hasScrolled: boolean) => void
+  onScrollStateChange: (scrolled: boolean) => void
 }
 
 const clamp01 = (value: number) => Math.max(0, Math.min(1, value))
+
 const smooth01 = (value: number) => {
   const t = clamp01(value)
   return t * t * (3 - 2 * t)
 }
+
 const segmentProgress = (progress: number, start: number, end: number) =>
   smooth01((progress - start) / (end - start))
 
@@ -22,103 +24,107 @@ export function CameraRig({
 }: CameraRigProps) {
   const { camera, scene } = useThree()
   const scroll = useScroll()
-  const fog = useMemo(() => new FogExp2('#020508', 0.05), [])
+  const didScrollRef = useRef(false)
 
-  const startPosition = useMemo(() => new Vector3(-4, 1.6, -2), [])
-  const churchPosition = useMemo(() => new Vector3(0, 1.35, 4.5), [])
-  const treeEntryPosition = useMemo(() => new Vector3(0, -15.6, 8), [])
-  const treeExitPosition = useMemo(() => new Vector3(4, -15.8, 5), [])
-  const caveEntryPosition = useMemo(() => new Vector3(0, -34.2, 5), [])
-  const endOfSpiral = useMemo(() => {
-    const startAngle = Math.atan2(5, 4)
-    return new Vector3(
-      Math.cos(startAngle) * 2.1,
-      -29.8,
-      Math.sin(startAngle) * 2.1,
-    )
-  }, [])
+  const fog = useMemo(() => new FogExp2('#020509', 0.02), [])
 
-  const startLook = useMemo(() => new Vector3(0, 1, 0), [])
-  const churchLook = useMemo(() => new Vector3(0, 0.7, 0), [])
-  const treeLookStart = useMemo(() => new Vector3(0, -13.8, 0), [])
-  const treeLookEnd = useMemo(() => new Vector3(0, -15.5, 0), [])
-  const caveLook = useMemo(() => new Vector3(0, -35.1, 0), [])
-  const rootsLook = useMemo(() => new Vector3(0, -26.5, 0), [])
+  const skyPosition = useMemo(() => new Vector3(0, 25, 25), [])
+  const descentPosition = useMemo(() => new Vector3(0, 8, 12), [])
+  const treeApproachPosition = useMemo(() => new Vector3(-2, 1.6, 5), [])
+
+  const spiralStartPosition = useMemo(
+    () => new Vector3(Math.sin(6) * 3, 1.6, -2 + Math.cos(6) * 3),
+    [],
+  )
+  const spiralEndPosition = useMemo(
+    () => new Vector3(Math.sin(8) * 3, -0.4, -2 + Math.cos(8) * 3),
+    [],
+  )
+
+  // Cave origin is [0, -8, -15], so this is local camera [0, 1.2, 3].
+  const caveCameraPosition = useMemo(() => new Vector3(0, -6.8, -12), [])
+  const skyLook = useMemo(() => new Vector3(0, 0, 0), [])
+  const forestLook = useMemo(() => new Vector3(0, 0, -1), [])
+  const treeLook = useMemo(() => new Vector3(0, 5.5, -2), [])
+  const treeExitLook = useMemo(() => new Vector3(0, 1, -2), [])
+  const rootsLook = useMemo(() => new Vector3(0, -0.45, -2), [])
+  const caveLook = useMemo(() => new Vector3(0, -7.2, -15), [])
 
   const targetPosition = useMemo(() => new Vector3(), [])
-  const targetLook = useMemo(() => new Vector3(0, 1, 0), [])
-  const currentLook = useMemo(() => new Vector3(0, 1, 0), [])
+  const targetLook = useMemo(() => new Vector3(), [])
+  const currentLook = useMemo(() => new Vector3(0, 0, 0), [])
 
   useEffect(() => {
     const previousFog = scene.fog
     scene.fog = fog
+
     return () => {
       scene.fog = previousFog
     }
   }, [fog, scene])
 
-  useEffect(() => {
-    const element = scroll.el
-    if (!element) return
-    const updateHint = () => {
-      if (element.scrollTop > 50) onScrollStateChange?.(true)
-    }
-    element.addEventListener('scroll', updateHint, { passive: true })
-    updateHint()
-    return () => element.removeEventListener('scroll', updateHint)
-  }, [scroll.el, onScrollStateChange])
-
   useFrame((_, delta) => {
-    const p = isPlayerOpen ? 1 : scroll.offset
+    const progress = isPlayerOpen ? 1 : scroll.offset
+    const hasScrolled = progress > 0.05
 
-    if (p <= 0.2) {
-      const t = segmentProgress(p, 0, 0.2)
-      targetPosition.copy(startPosition).lerp(churchPosition, t)
-      targetLook.copy(startLook).lerp(churchLook, t)
-    } else if (p <= 0.3) {
-      // The fog spike conceals the large vertical transfer between worlds.
-      const t = segmentProgress(p, 0.2, 0.3)
-      targetPosition.copy(churchPosition).lerp(treeEntryPosition, t)
-      targetLook.copy(churchLook).lerp(treeLookStart, t)
-    } else if (p <= 0.6) {
-      const t = segmentProgress(p, 0.3, 0.6)
-      targetPosition.copy(treeEntryPosition).lerp(treeExitPosition, t)
-      targetLook.copy(treeLookStart).lerp(treeLookEnd, t)
-    } else if (p <= 0.8) {
-      const t = segmentProgress(p, 0.6, 0.8)
-      const angle = Math.atan2(5, 4) + t * Math.PI * 4
-      const radius = MathUtils.lerp(Math.hypot(4, 5), 2.1, t)
+    if (hasScrolled !== didScrollRef.current) {
+      didScrollRef.current = hasScrolled
+      onScrollStateChange(hasScrolled)
+    }
+
+    if (progress <= 0.2) {
+      // Zone 1: high establishing shot over the forest and church.
+      targetPosition.copy(skyPosition)
+      targetLook.copy(skyLook)
+      fog.density = 0.02
+    } else if (progress <= 0.3) {
+      // Zone 2a: dive from the aerial view toward the forest.
+      const t = segmentProgress(progress, 0.2, 0.3)
+      targetPosition.copy(skyPosition).lerp(descentPosition, t)
+      targetLook.copy(skyLook).lerp(forestLook, t)
+      fog.density = MathUtils.lerp(0.02, 0.1, t)
+    } else if (progress <= 0.4) {
+      // Zone 2b: fog conceals the final approach into the tree zone.
+      const t = segmentProgress(progress, 0.3, 0.4)
+      targetPosition.copy(descentPosition).lerp(treeApproachPosition, t)
+      targetLook.copy(forestLook).lerp(treeLook, t)
+      fog.density = MathUtils.lerp(0.1, 0.025, t)
+    } else if (progress <= 0.6) {
+      // Zone 3: emerge from the fog and glide toward the tree branches.
+      const t = segmentProgress(progress, 0.4, 0.6)
+      targetPosition.copy(treeApproachPosition).lerp(spiralStartPosition, t)
+      targetLook.copy(treeLook).lerp(treeExitLook, t)
+      fog.density = MathUtils.lerp(0.025, 0.035, t)
+    } else if (progress <= 0.8) {
+      // Zone 4: spiral down around the trunk toward the roots.
+      const t = segmentProgress(progress, 0.6, 0.8)
       targetPosition.set(
-        Math.cos(angle) * radius,
-        MathUtils.lerp(-15.8, -29.8, t),
-        Math.sin(angle) * radius,
+        Math.sin(progress * 10) * 3,
+        1.6 - (progress - 0.6) * 10,
+        -2 + Math.cos(progress * 10) * 3,
       )
-      targetLook.set(0, MathUtils.lerp(-18, -26.5, t), 0)
+      targetLook.set(0, MathUtils.lerp(0, -0.45, t), -2)
+      fog.density = MathUtils.lerp(0.035, 0.085, t)
     } else {
-      const t = segmentProgress(p, 0.8, 1)
-      targetPosition.copy(endOfSpiral).lerp(caveEntryPosition, t)
+      // Zone 5: enter the cave; final local camera position is [0, 1.2, 3].
+      const t = segmentProgress(progress, 0.8, 1)
+      targetPosition.copy(spiralEndPosition).lerp(caveCameraPosition, t)
       targetLook.copy(rootsLook).lerp(caveLook, t)
+      fog.density = MathUtils.lerp(0.085, 0.035, t)
     }
 
-    const transitionIn = smooth01((p - 0.2) / 0.04)
-    const transitionOut = 1 - smooth01((p - 0.26) / 0.04)
-    const transitionFog = Math.min(transitionIn, transitionOut)
-    let fogDensity = 0.05 + 0.45 * transitionFog
-
-    if (p >= 0.6 && p < 0.8) {
-      fogDensity = MathUtils.lerp(0.06, 0.22, segmentProgress(p, 0.6, 0.8))
-    } else if (p >= 0.8) {
-      fogDensity = MathUtils.lerp(0.22, 0.075, segmentProgress(p, 0.8, 0.88))
+    if (isPlayerOpen) {
+      targetPosition.copy(caveCameraPosition)
+      targetLook.copy(caveLook)
     }
-    fog.density = fogDensity
 
-    camera.position.x = MathUtils.damp(camera.position.x, targetPosition.x, 2.4, delta)
-    camera.position.y = MathUtils.damp(camera.position.y, targetPosition.y, 2.4, delta)
-    camera.position.z = MathUtils.damp(camera.position.z, targetPosition.z, 2.4, delta)
+    camera.position.x = MathUtils.damp(camera.position.x, targetPosition.x, 2.8, delta)
+    camera.position.y = MathUtils.damp(camera.position.y, targetPosition.y, 2.8, delta)
+    camera.position.z = MathUtils.damp(camera.position.z, targetPosition.z, 2.8, delta)
 
-    currentLook.x = MathUtils.damp(currentLook.x, targetLook.x, 3.2, delta)
-    currentLook.y = MathUtils.damp(currentLook.y, targetLook.y, 3.2, delta)
-    currentLook.z = MathUtils.damp(currentLook.z, targetLook.z, 3.2, delta)
+    currentLook.x = MathUtils.damp(currentLook.x, targetLook.x, 3.4, delta)
+    currentLook.y = MathUtils.damp(currentLook.y, targetLook.y, 3.4, delta)
+    currentLook.z = MathUtils.damp(currentLook.z, targetLook.z, 3.4, delta)
     camera.lookAt(currentLook)
   })
 

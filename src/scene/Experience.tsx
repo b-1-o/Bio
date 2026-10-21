@@ -2,13 +2,13 @@ import { Suspense } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { ScrollControls } from '@react-three/drei'
 import { CameraRig } from './CameraRig'
-import { Zones } from './Zones'
+import { Scene } from './Scene'
 import { PostFX } from './PostFX'
 
-export type ExperienceProps = {
+type ExperienceProps = {
   isPlayerOpen: boolean
   onPlayerOpenChange: (open: boolean) => void
-  onScrollStateChange?: (hasScrolled: boolean) => void
+  onScrollStateChange: (scrolled: boolean) => void
 }
 
 export function Experience({
@@ -19,10 +19,10 @@ export function Experience({
   return (
     <Canvas
       camera={{
-        position: [-4, 1.6, -2],
+        position: [0, 25, 25],
         fov: 48,
         near: 0.1,
-        far: 220,
+        far: 240,
       }}
       dpr={[1, 1.5]}
       shadows
@@ -44,7 +44,7 @@ export function Experience({
       <Suspense fallback={null}>
         <ScrollControls
           pages={5}
-          damping={0.2}
+          damping={0.15}
           enabled={!isPlayerOpen}
           style={{
             overflowY: isPlayerOpen ? 'hidden' : 'auto',
@@ -52,7 +52,12 @@ export function Experience({
             scrollbarWidth: 'none',
           }}
         >
-          <Zones
+          {/*
+            Keep the world in fixed world-space coordinates while the camera
+            travels. Wrapping the whole world in drei's <Scroll> would translate
+            every model too and cause a second, competing movement.
+          */}
+          <Scene
             isPlayerOpen={isPlayerOpen}
             onPlayerOpenChange={onPlayerOpenChange}
           />

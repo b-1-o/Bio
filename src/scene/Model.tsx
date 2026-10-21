@@ -1,17 +1,21 @@
 import { useEffect, useMemo } from 'react'
 import { useGLTF } from '@react-three/drei'
 import { useThree, type ThreeElements } from '@react-three/fiber'
-import type { Color, Material, Mesh, Object3D, Texture } from 'three'
 import {
   Box3,
   LinearFilter,
   LinearMipmapLinearFilter,
   SRGBColorSpace,
+  type Color,
+  type Material,
+  type Mesh,
+  type Object3D,
+  type Texture,
 } from 'three'
 
 const BASE = import.meta.env.BASE_URL
 
-useGLTF.setDecoderPath(BASE + 'draco/')
+useGLTF.setDecoderPath(`${BASE}draco/`)
 
 type ModelProps = ThreeElements['group'] & {
   path: string
@@ -55,7 +59,7 @@ function configureTextureQuality(scene: Object3D, anisotropy: number) {
         texture.magFilter = LinearFilter
         texture.generateMipmaps = true
 
-        // Only color maps use sRGB; normal/roughness/metalness maps are data.
+        // Only color maps are sRGB; numeric material maps stay linear data.
         if (COLOR_TEXTURE_FIELDS.has(field)) {
           texture.colorSpace = SRGBColorSpace
         }
@@ -66,16 +70,14 @@ function configureTextureQuality(scene: Object3D, anisotropy: number) {
   })
 }
 
-/**
- * Clone model instances and ground each clone from its measured local bounds.
- * Textures stay shared with the cached GLTF and receive higher-quality sampling.
- */
+/** Clone per-instance materials and align the measured lowest point to y=0. */
 function cloneAndGround(scene: Object3D) {
   const clone = scene.clone(true)
 
   clone.traverse((object) => {
     const mesh = object as Mesh
     if (!mesh.isMesh) return
+
     mesh.material = Array.isArray(mesh.material)
       ? mesh.material.map((material) => material.clone())
       : mesh.material.clone()
@@ -94,6 +96,7 @@ export function Model({ path, highlight = false, ...props }: ModelProps) {
   const { gl } = useThree()
 
   const groundedScene = useMemo(() => {
+    // Use the hardware limit when below 16; otherwise use requested 16x anisotropy.
     const anisotropy = Math.min(16, gl.capabilities.getMaxAnisotropy())
     configureTextureQuality(scene, anisotropy)
     return cloneAndGround(scene)
@@ -106,7 +109,10 @@ export function Model({ path, highlight = false, ...props }: ModelProps) {
       const mesh = object as Mesh
       if (!mesh.isMesh) return
 
-      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+      const materials = Array.isArray(mesh.material)
+        ? mesh.material
+        : [mesh.material]
+
       for (const material of materials) {
         const emissiveMaterial = material as EmissiveMaterial
         if (!emissiveMaterial.emissive) continue
@@ -115,8 +121,8 @@ export function Model({ path, highlight = false, ...props }: ModelProps) {
         const previousIntensity = emissiveMaterial.emissiveIntensity ?? 1
 
         if (highlight) {
-          emissiveMaterial.emissive.set('#263f68')
-          emissiveMaterial.emissiveIntensity = Math.max(previousIntensity, 0.65)
+          emissiveMaterial.emissive.set('#264d70')
+          emissiveMaterial.emissiveIntensity = Math.max(previousIntensity, 0.75)
         } else {
           emissiveMaterial.emissive.copy(previousColor)
           emissiveMaterial.emissiveIntensity = previousIntensity
@@ -135,7 +141,7 @@ export function Model({ path, highlight = false, ...props }: ModelProps) {
   return <primitive object={groundedScene} {...props} dispose={null} />
 }
 
-useGLTF.preload(BASE + 'assets/stone_opt.glb')
-useGLTF.preload(BASE + 'assets/rocks_web.glb')
-useGLTF.preload(BASE + 'assets/tree_web.glb')
-useGLTF.preload(BASE + 'assets/forest_web.glb')
+useGLTF.preload(`${BASE}assets/forest.glb`)
+useGLTF.preload(`${BASE}assets/stone_opt.glb`)
+useGLTF.preload(`${BASE}assets/rocks_web.glb`)
+useGLTF.preload(`${BASE}assets/tree_web.glb`)

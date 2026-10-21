@@ -1,19 +1,14 @@
-import {
-  Component,
-  Suspense,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react'
-import { Canvas, useFrame, type ThreeEvent } from '@react-three/fiber'
-import { Environment, ScrollControls } from '@react-three/drei'
-import type { Group } from 'three'
+import { useEffect, useState } from 'react'
+import { type ThreeEvent } from '@react-three/fiber'
 import { Model } from './Model'
-import { CameraRig } from './CameraRig'
-import { PostFX } from './PostFX'
+import { SocialLinks } from './SocialLinks'
 
 const BASE = import.meta.env.BASE_URL
+
+type SceneProps = {
+  isPlayerOpen: boolean
+  onPlayerOpenChange: (open: boolean) => void
+}
 
 type Placement = {
   id: string
@@ -22,75 +17,24 @@ type Placement = {
   rotation: number
 }
 
-const trees: Placement[] = [
-  { id: 'tree-left-front', position: [-3.9, 0, 1.2], scale: 2.4, rotation: 0.35 },
-  { id: 'tree-right-front', position: [3.9, 0, 1.4], scale: 2.6, rotation: -0.3 },
-  { id: 'tree-left-mid', position: [-6.7, 0, -4.2], scale: 3, rotation: 0.15 },
-  { id: 'tree-right-mid', position: [6.9, 0, -5.1], scale: 3.1, rotation: -0.2 },
-  { id: 'tree-back-left', position: [-10.5, 0, -12], scale: 3.8, rotation: 0.1 },
-  { id: 'tree-back-right', position: [11, 0, -13], scale: 4, rotation: -0.1 },
-  { id: 'tree-far-left', position: [-15, 0, -2.5], scale: 4, rotation: 0.25 },
-  { id: 'tree-far-right', position: [15.5, 0, -4], scale: 4.1, rotation: -0.2 },
+const forestRocks: Placement[] = [
+  { id: 'forest-rock-west-front', position: [-5.5, 0, 2], scale: 0.85, rotation: 0.35 },
+  { id: 'forest-rock-east-front', position: [5.4, 0, 2.5], scale: 0.9, rotation: -0.4 },
+  { id: 'forest-rock-west-back', position: [-5.8, 0, -6.5], scale: 0.92, rotation: 1.1 },
+  { id: 'forest-rock-east-back', position: [5.7, 0, -6], scale: 0.88, rotation: -0.8 },
 ]
 
-const rocks: Placement[] = [
-  { id: 'rock-left-front', position: [-3.2, 0, 0.8], scale: 0.68, rotation: 0.45 },
-  { id: 'rock-right-front', position: [3.3, 0, 0.5], scale: 0.62, rotation: -0.55 },
-  { id: 'rock-left-back', position: [-3.8, 0, -3.3], scale: 0.78, rotation: 1.05 },
-  { id: 'rock-right-back', position: [3.9, 0, -4.1], scale: 0.72, rotation: -1.1 },
-  { id: 'rock-side-left', position: [-5.4, 0, -0.7], scale: 0.62, rotation: 0.2 },
-  { id: 'rock-side-right', position: [5.3, 0, -1.2], scale: 0.65, rotation: -0.15 },
+const caveRocks: Placement[] = [
+  { id: 'cave-rock-west', position: [-3.6, 0, 0.1], scale: 0.86, rotation: 0.2 },
+  { id: 'cave-rock-east', position: [3.5, 0, -0.4], scale: 0.92, rotation: -0.6 },
+  { id: 'cave-rock-back-west', position: [-2.6, 0, -3.8], scale: 0.8, rotation: 1.05 },
+  { id: 'cave-rock-back-east', position: [2.5, 0, -3.5], scale: 0.82, rotation: -1.1 },
 ]
 
-type SceneProps = {
-  isPlayerOpen: boolean
-  onPlayerOpenChange: (open: boolean) => void
-  onScrollStateChange?: (hasScrolled: boolean) => void
-}
-
-type ForestBoundaryProps = {
-  children: ReactNode
-  fallback: ReactNode
-}
-
-class ForestAssetBoundary extends Component<
-  ForestBoundaryProps,
-  { hasError: boolean }
-> {
-  state = { hasError: false }
-
-  static getDerivedStateFromError() {
-    return { hasError: true }
-  }
-
-  componentDidCatch(error: Error) {
-    console.warn(
-      'assets/forest.glb is unavailable; temporarily using the existing forest_web.glb asset.',
-      error.message,
-    )
-  }
-
-  render() {
-    return this.state.hasError ? this.props.fallback : this.props.children
-  }
-}
-
-function ForestGround() {
-  return (
-    <ForestAssetBoundary
-      fallback={<Model path={BASE + 'assets/forest_web.glb'} />}
-    >
-      <Suspense fallback={null}>
-        <Model path={BASE + 'assets/forest.glb'} />
-      </Suspense>
-    </ForestAssetBoundary>
-  )
-}
-
-type StoneProps = Pick<SceneProps, 'isPlayerOpen' | 'onPlayerOpenChange'>
-
-function CentralStone({ isPlayerOpen, onPlayerOpenChange }: StoneProps) {
-  const rotationGroup = useRef<Group>(null)
+function CentralStone({
+  isPlayerOpen,
+  onPlayerOpenChange,
+}: SceneProps) {
   const [hovered, setHovered] = useState(false)
 
   useEffect(() => {
@@ -98,12 +42,6 @@ function CentralStone({ isPlayerOpen, onPlayerOpenChange }: StoneProps) {
       document.body.style.cursor = 'default'
     }
   }, [])
-
-  useFrame((_, delta) => {
-    if (rotationGroup.current && !isPlayerOpen) {
-      rotationGroup.current.rotation.y += delta * 0.055
-    }
-  })
 
   const handleClick = (event: ThreeEvent<MouseEvent>) => {
     event.stopPropagation()
@@ -124,144 +62,137 @@ function CentralStone({ isPlayerOpen, onPlayerOpenChange }: StoneProps) {
 
   return (
     <group
-      position={[0, 0, 0]}
       onClick={handleClick}
       onPointerOver={handlePointerOver}
       onPointerOut={handlePointerOut}
     >
       <pointLight
-        color="#88bbff"
-        intensity={hovered ? 2 : 0.18}
-        distance={hovered ? 5 : 2.5}
+        position={[0, 2.35, 0.25]}
+        color="#91e5ff"
+        intensity={hovered ? 4 : 2.1}
+        distance={hovered ? 8 : 5.5}
         decay={2}
-        position={[0, 1.15, 0.2]}
       />
-
-      <group ref={rotationGroup} scale={1}>
-        {/* Model.tsx measures the GLB bounds and lowers its clone onto y=0. */}
-        <Model
-          path={BASE + 'assets/stone_opt.glb'}
-          highlight={hovered}
-        />
-      </group>
+      <Model
+        path={`${BASE}assets/stone_opt.glb`}
+        scale={1.5}
+        highlight={hovered}
+      />
     </group>
   )
 }
 
-function SceneContent(props: SceneProps) {
+function CaveZone({
+  isPlayerOpen,
+  onPlayerOpenChange,
+}: SceneProps) {
   return (
-    <>
-      <color attach="background" args={['#030303']} />
-      <fogExp2 attach="fog" args={['#030303', 0.055]} />
+    <group position={[0, -8, -15]}>
+      <mesh
+        position={[0, -0.08, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        receiveShadow
+      >
+        <circleGeometry args={[8.5, 96]} />
+        <meshStandardMaterial
+          color="#04090e"
+          roughness={0.98}
+          metalness={0.08}
+        />
+      </mesh>
 
-      <Environment
-        files={BASE + 'assets/dark_autumn_forest_1k.hdr'}
-        background={false}
-        environmentIntensity={0.2}
-      />
-
-      <ambientLight intensity={0.1} />
-
-      <spotLight
-        position={[0, 4.5, 0]}
-        angle={0.55}
-        penumbra={1}
-        intensity={10}
-        color="#88bbff"
-        castShadow
-        shadow-mapSize={[1024, 1024]}
-      />
-
-      <directionalLight
-        color="#516b92"
-        intensity={0.65}
-        position={[-5, 7, 4]}
-      />
-
-      {/* Prefer the original high-resolution asset; the boundary keeps the
-          published scene alive until forest.glb is added to public/assets. */}
-      <group position={[0, 0, 0]} scale={1.5}>
-        <ForestGround />
-      </group>
-
-      {trees.map((tree) => (
-        <group
-          key={tree.id}
-          position={tree.position}
-          scale={tree.scale}
-          rotation={[0, tree.rotation, 0]}
-        >
-          <Model path={BASE + 'assets/tree_web.glb'} />
-        </group>
-      ))}
-
-      {rocks.map((rock) => (
+      {caveRocks.map((rock) => (
         <group
           key={rock.id}
           position={rock.position}
           scale={rock.scale}
           rotation={[0, rock.rotation, 0]}
         >
-          <Model path={BASE + 'assets/rocks_web.glb'} />
+          <Model path={`${BASE}assets/rocks_web.glb`} />
         </group>
       ))}
 
+      <pointLight
+        position={[-3, 1.2, 0.5]}
+        color="#248dc4"
+        intensity={3.4}
+        distance={12}
+        decay={2}
+      />
+      <pointLight
+        position={[3.5, 1.8, -3]}
+        color="#3168a8"
+        intensity={2.7}
+        distance={10}
+        decay={2}
+      />
+      <pointLight
+        position={[0, 2.7, 0.3]}
+        color="#9beaff"
+        intensity={1.6}
+        distance={6}
+        decay={2}
+      />
+
       <CentralStone
-        isPlayerOpen={props.isPlayerOpen}
-        onPlayerOpenChange={props.onPlayerOpenChange}
+        isPlayerOpen={isPlayerOpen}
+        onPlayerOpenChange={onPlayerOpenChange}
       />
-
-      <CameraRig
-        isPlayerOpen={props.isPlayerOpen}
-        onScrollStateChange={props.onScrollStateChange}
-      />
-
-      <PostFX />
-    </>
+    </group>
   )
 }
 
 export function Scene(props: SceneProps) {
   return (
-    <Canvas
-      camera={{
-        position: [0, 1.6, 8],
-        fov: 50,
-        near: 0.1,
-        far: 200,
-      }}
-      dpr={[1, 1.5]}
-      frameloop="always"
-      shadows
-      gl={{
-        antialias: true,
-        alpha: false,
-        powerPreference: 'high-performance',
-      }}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        width: '100%',
-        height: '100%',
-        zIndex: 0,
-        pointerEvents: 'auto',
-        touchAction: 'pan-y',
-      }}
-    >
-      <Suspense fallback={null}>
-        <ScrollControls
-          pages={3}
-          damping={0.18}
-          enabled={!props.isPlayerOpen}
-          style={{
-            overflowY: props.isPlayerOpen ? 'hidden' : 'auto',
-            overflowX: 'hidden',
-            scrollbarWidth: 'none',
-          }}
+    <>
+      <color attach="background" args={['#020509']} />
+
+      <ambientLight color="#1a1a2e" intensity={0.15} />
+
+      <directionalLight
+        color="#8dc9ec"
+        intensity={0.62}
+        position={[-7, 12, 7]}
+      />
+
+      {/* The original 12 MB forest asset is the only forest ground model. */}
+      <group position={[0, 0, 0]} scale={2}>
+        <Model path={`${BASE}assets/forest.glb`} />
+      </group>
+
+      {forestRocks.map((rock) => (
+        <group
+          key={rock.id}
+          position={rock.position}
+          scale={rock.scale}
+          rotation={[0, rock.rotation, 0]}
         >
-          <SceneContent {...props} />
-        </ScrollControls>
-      </Suspense>
-    </Canvas>
+          <Model path={`${BASE}assets/rocks_web.glb`} />
+        </group>
+      ))}
+
+      {/* Zone 3: dead tree. Model.tsx grounds it before scaling/placement. */}
+      <group position={[0, 0, -2]} scale={3}>
+        <Model path={`${BASE}assets/tree_web.glb`} />
+      </group>
+
+      <spotLight
+        position={[0, 5, 5]}
+        intensity={5}
+        color="#88bbff"
+        angle={0.62}
+        penumbra={0.9}
+        castShadow
+        shadow-mapSize={[1024, 1024]}
+      />
+
+      <SocialLinks />
+
+      {/* Zone 5 is a separate world-space pocket beneath and behind the forest. */}
+      <CaveZone
+        isPlayerOpen={props.isPlayerOpen}
+        onPlayerOpenChange={props.onPlayerOpenChange}
+      />
+    </>
   )
 }

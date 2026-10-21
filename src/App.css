@@ -68,7 +68,7 @@ a {
   height: 500vh;
   min-height: 500vh;
   isolation: isolate;
-  overflow: clip;
+  overflow: visible;
   background: #020509;
 }
 
