@@ -152,7 +152,7 @@ function DeadTreeSocialZone() {
     <group>
       {/* A simple floor keeps the tree's base visually grounded at this altitude. */}
       <mesh
-        position={[0, -18.08, 0]}
+        position={[0, -18.01, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
         receiveShadow
       >
@@ -201,7 +201,7 @@ function CaveZone({
   return (
     <group>
       <mesh
-        position={[0, -36.08, 0]}
+        position={[0, -36.01, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
         receiveShadow
       >
