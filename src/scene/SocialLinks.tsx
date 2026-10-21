@@ -2,6 +2,8 @@ import { Html, useGLTF } from '@react-three/drei'
 import { Box3, Vector3 } from 'three'
 import { useMemo } from 'react'
 
+export const TREE_SCALE = 2.35
+
 type SocialLink = {
   id: string
   label: string
@@ -43,14 +45,15 @@ const links: Omit<SocialLink, 'position'>[] = [
   },
 ]
 
-export function SocialLinks() {
+export function SocialLinks({ scale = TREE_SCALE }: { scale?: number }) {
   const { scene } = useGLTF(import.meta.env.BASE_URL + 'assets/tree_web.glb')
   const positionedLinks = useMemo(() => {
+    scene.updateMatrixWorld(true)
     const bounds = new Box3().setFromObject(scene)
     if (bounds.isEmpty()) {
       return links.map((link, index) => ({
         ...link,
-        position: [[1.2, 3.4, 0.4], [-1.2, 4.3, 0.4], [1.0, 5.2, 0.4], [-0.8, 6.0, 0.4]][index] as [number, number, number],
+        position: [[1.2, 3.4, 0.4], [-1.2, 4.3, 0.4], [1.0, 5.2, 0.4], [-0.8, 6.0, 0.4]][index].map((value) => value * scale) as [number, number, number],
       }))
     }
 
@@ -66,12 +69,12 @@ export function SocialLinks() {
     return links.map((link, index) => ({
       ...link,
       position: [
-        bounds.min.x + size.x * anchors[index][0],
-        bounds.min.y + size.y * anchors[index][1],
-        center.z + size.z * 0.16,
+        (bounds.min.x + size.x * anchors[index][0]) * scale,
+        size.y * anchors[index][1] * scale,
+        (center.z + size.z * 0.16) * scale,
       ] as [number, number, number],
     }))
-  }, [scene])
+  }, [scene, scale])
 
   return (
     <group>
