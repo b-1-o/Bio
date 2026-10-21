@@ -59,7 +59,8 @@ export function SocialLinks({ scale = TREE_SCALE }: { scale?: number }) {
       ]
       return links.map((link, index) => {
         const [x, y, z] = fallbackPositions[index]
-        return { ...link, position: [x * scale, y * scale, z * scale] }
+        const position: [number, number, number] = [x * scale, y * scale, z * scale]
+        return { ...link, position }
       })
     }
 
