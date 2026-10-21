@@ -140,5 +140,4 @@ export function Model({ path, highlight = false, ...props }: ModelProps) {
 
 useGLTF.preload(BASE + 'assets/forest.glb')
 useGLTF.preload(BASE + 'assets/stone_opt.glb')
-useGLTF.preload(BASE + 'assets/rocks_web.glb')
 useGLTF.preload(BASE + 'assets/tree_web.glb')
