@@ -47,10 +47,46 @@ function ForestGround() {
   )
 }
 
+const openingTrees = [
+  { id: 'opening-left-near', position: [-8, 0, 1] as [number, number, number], scale: 3.5, rotation: 0.25 },
+  { id: 'opening-right-near', position: [8, 0, 0] as [number, number, number], scale: 3.8, rotation: -0.2 },
+  { id: 'opening-left-back', position: [-10, 0, -8] as [number, number, number], scale: 4.1, rotation: 0.1 },
+  { id: 'opening-right-back', position: [10, 0, -9] as [number, number, number], scale: 4.2, rotation: -0.15 },
+  { id: 'opening-left-deep', position: [-11, 0, 12] as [number, number, number], scale: 4.5, rotation: -0.2 },
+  { id: 'opening-right-deep', position: [11, 0, 11] as [number, number, number], scale: 4.6, rotation: 0.3 },
+  { id: 'opening-far-left', position: [-17, 0, -2] as [number, number, number], scale: 4.4, rotation: 0.2 },
+  { id: 'opening-far-right', position: [18, 0, 1] as [number, number, number], scale: 4.7, rotation: -0.25 },
+  { id: 'opening-back-left', position: [-14, 0, -18] as [number, number, number], scale: 4.8, rotation: -0.15 },
+  { id: 'opening-back-right', position: [14, 0, -19] as [number, number, number], scale: 4.9, rotation: 0.15 },
+  { id: 'opening-forward-left', position: [-5.5, 0, 17] as [number, number, number], scale: 3.8, rotation: 0.1 },
+  { id: 'opening-forward-right', position: [5.5, 0, 17] as [number, number, number], scale: 3.9, rotation: -0.1 },
+]
+
 function OpeningForestZone() {
   return (
     <group>
+      {/* Native ground surface only; no substitute forest GLB is loaded. */}
+      <mesh
+        position={[0, 0.01, -1]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        receiveShadow
+      >
+        <planeGeometry args={[100, 100]} />
+        <meshStandardMaterial color="#05090c" roughness={1} />
+      </mesh>
+
       <ForestGround />
+
+      {openingTrees.map((tree) => (
+        <group
+          key={tree.id}
+          position={tree.position}
+          scale={tree.scale}
+          rotation={[0, tree.rotation, 0]}
+        >
+          <Model path={BASE + 'assets/tree_web.glb'} />
+        </group>
+      ))}
 
       <pointLight
         color="#8bdfff"
