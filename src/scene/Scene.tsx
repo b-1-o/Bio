@@ -3,20 +3,17 @@ import { Canvas } from '@react-three/fiber'
 import { Environment, OrbitControls } from '@react-three/drei'
 import { Model } from './Model'
 
+const BASE = import.meta.env.BASE_URL
+
 function SceneContent() {
   return (
     <>
-      {/* Освещение из HDRI */}
-      <Environment files="/assets/dark_autumn_forest_1k.hdr" background={false} />
-
-      {/* Небольшая подсветка спереди, чтобы модель не была в полной темноте */}
+      <Environment files={`${BASE}assets/dark_autumn_forest_1k.hdr`} background={false} />
       <ambientLight intensity={0.15} />
       <directionalLight position={[3, 5, 2]} intensity={0.6} />
 
-      {/* Камень в центре — первый тест */}
-      <Model path="/assets/stone_opt.glb" position={[0, 0, 0]} scale={2} />
+      <Model path={`${BASE}assets/stone_opt.glb`} position={[0, 0, 0]} scale={2} />
 
-      {/* Временные контролы, чтобы покрутить сцену мышкой. Уберём позже */}
       <OrbitControls enablePan={false} minDistance={2} maxDistance={8} />
     </>
   )

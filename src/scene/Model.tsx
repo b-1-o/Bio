@@ -1,7 +1,10 @@
 import { useGLTF } from '@react-three/drei'
 import type { ThreeElements } from '@react-three/fiber'
 
-useGLTF.setDecoderPath('/draco/')
+// В dev = "/", в prod (GitHub Pages) = "/Bio/"
+const BASE = import.meta.env.BASE_URL
+
+useGLTF.setDecoderPath(`${BASE}draco/`)
 
 type ModelProps = ThreeElements['group'] & {
   path: string
@@ -12,8 +15,8 @@ export function Model({ path, ...props }: ModelProps) {
   return <primitive object={scene} {...props} />
 }
 
-// Предзагрузка — начнёт качать модели сразу при импорте модуля
-useGLTF.preload('/assets/stone_opt.glb')
-useGLTF.preload('/assets/rocks_web.glb')
-useGLTF.preload('/assets/tree_web.glb')
-useGLTF.preload('/assets/forest_web.glb')
+// Предзагрузка моделей (пути уже с правильным base)
+useGLTF.preload(`${BASE}assets/stone_opt.glb`)
+useGLTF.preload(`${BASE}assets/rocks_web.glb`)
+useGLTF.preload(`${BASE}assets/tree_web.glb`)
+useGLTF.preload(`${BASE}assets/forest_web.glb`)
