@@ -1,6 +1,13 @@
-import { Suspense, useEffect, useRef, useState } from 'react'
+import {
+  Component,
+  Suspense,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
 import { Canvas, useFrame, type ThreeEvent } from '@react-three/fiber'
-import { Environment } from '@react-three/drei'
+import { Environment, ScrollControls } from '@react-three/drei'
 import type { Group } from 'three'
 import { Model } from './Model'
 import { CameraRig } from './CameraRig'
@@ -16,30 +23,73 @@ type Placement = {
 }
 
 const trees: Placement[] = [
-  { id: 'tree-left-frame', position: [-3, 0, 2], scale: 2.5, rotation: 0.5 },
-  { id: 'tree-right-frame', position: [3, 0, 1], scale: 3, rotation: -0.5 },
-  { id: 'tree-left-mid', position: [-8, 0, -7], scale: 3.2, rotation: 0.2 },
-  { id: 'tree-right-mid', position: [9, 0, -9], scale: 3.5, rotation: -0.3 },
-  { id: 'tree-left-deep', position: [-14, 0, -18], scale: 4.3, rotation: -0.1 },
-  { id: 'tree-right-deep', position: [15, 0, -20], scale: 4.5, rotation: 0.25 },
-  { id: 'tree-far-left', position: [-20, 0, -3], scale: 4, rotation: 0.35 },
-  { id: 'tree-far-right', position: [21, 0, -5], scale: 4.2, rotation: -0.2 },
+  { id: 'tree-left-front', position: [-3.9, 0, 1.2], scale: 2.4, rotation: 0.35 },
+  { id: 'tree-right-front', position: [3.9, 0, 1.4], scale: 2.6, rotation: -0.3 },
+  { id: 'tree-left-mid', position: [-6.7, 0, -4.2], scale: 3, rotation: 0.15 },
+  { id: 'tree-right-mid', position: [6.9, 0, -5.1], scale: 3.1, rotation: -0.2 },
+  { id: 'tree-back-left', position: [-10.5, 0, -12], scale: 3.8, rotation: 0.1 },
+  { id: 'tree-back-right', position: [11, 0, -13], scale: 4, rotation: -0.1 },
+  { id: 'tree-far-left', position: [-15, 0, -2.5], scale: 4, rotation: 0.25 },
+  { id: 'tree-far-right', position: [15.5, 0, -4], scale: 4.1, rotation: -0.2 },
 ]
 
 const rocks: Placement[] = [
-  { id: 'rock-left', position: [-4.5, 0, -2], scale: 0.7, rotation: 0.55 },
-  { id: 'rock-right', position: [4.1, 0, -2.8], scale: 0.64, rotation: -0.7 },
-  { id: 'rock-back-left', position: [-2.4, 0, -4], scale: 0.82, rotation: 1.1 },
-  { id: 'rock-back-right', position: [2.7, 0, -5], scale: 0.76, rotation: -1.2 },
-  { id: 'rock-side-left', position: [-6.2, 0, 1], scale: 0.68, rotation: 0.2 },
+  { id: 'rock-left-front', position: [-3.2, 0, 0.8], scale: 0.68, rotation: 0.45 },
+  { id: 'rock-right-front', position: [3.3, 0, 0.5], scale: 0.62, rotation: -0.55 },
+  { id: 'rock-left-back', position: [-3.8, 0, -3.3], scale: 0.78, rotation: 1.05 },
+  { id: 'rock-right-back', position: [3.9, 0, -4.1], scale: 0.72, rotation: -1.1 },
+  { id: 'rock-side-left', position: [-5.4, 0, -0.7], scale: 0.62, rotation: 0.2 },
+  { id: 'rock-side-right', position: [5.3, 0, -1.2], scale: 0.65, rotation: -0.15 },
 ]
 
 type SceneProps = {
   isPlayerOpen: boolean
   onPlayerOpenChange: (open: boolean) => void
+  onScrollStateChange?: (hasScrolled: boolean) => void
 }
 
-function CentralStone({ isPlayerOpen, onPlayerOpenChange }: SceneProps) {
+type ForestBoundaryProps = {
+  children: ReactNode
+  fallback: ReactNode
+}
+
+class ForestAssetBoundary extends Component<
+  ForestBoundaryProps,
+  { hasError: boolean }
+> {
+  state = { hasError: false }
+
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+
+  componentDidCatch(error: Error) {
+    console.warn(
+      'assets/forest.glb is unavailable; temporarily using the existing forest_web.glb asset.',
+      error.message,
+    )
+  }
+
+  render() {
+    return this.state.hasError ? this.props.fallback : this.props.children
+  }
+}
+
+function ForestGround() {
+  return (
+    <ForestAssetBoundary
+      fallback={<Model path={BASE + 'assets/forest_web.glb'} />}
+    >
+      <Suspense fallback={null}>
+        <Model path={BASE + 'assets/forest.glb'} />
+      </Suspense>
+    </ForestAssetBoundary>
+  )
+}
+
+type StoneProps = Pick<SceneProps, 'isPlayerOpen' | 'onPlayerOpenChange'>
+
+function CentralStone({ isPlayerOpen, onPlayerOpenChange }: StoneProps) {
   const rotationGroup = useRef<Group>(null)
   const [hovered, setHovered] = useState(false)
 
@@ -74,7 +124,7 @@ function CentralStone({ isPlayerOpen, onPlayerOpenChange }: SceneProps) {
 
   return (
     <group
-      position={[0, 0.5, 0]}
+      position={[0, 0, 0]}
       onClick={handleClick}
       onPointerOver={handlePointerOver}
       onPointerOut={handlePointerOut}
@@ -84,13 +134,15 @@ function CentralStone({ isPlayerOpen, onPlayerOpenChange }: SceneProps) {
         intensity={hovered ? 2 : 0.18}
         distance={hovered ? 5 : 2.5}
         decay={2}
-        position={[0, 1, 0.3]}
+        position={[0, 1.15, 0.2]}
       />
+
       <group ref={rotationGroup} scale={1}>
-        {/* Model.tsx grounds its geometry; this offset compensates for y=0.5. */}
-        <group position={[0, -0.5, 0]}>
-          <Model path={`${BASE}assets/stone_opt.glb`} highlight={hovered} />
-        </group>
+        {/* Model.tsx measures the GLB bounds and lowers its clone onto y=0. */}
+        <Model
+          path={BASE + 'assets/stone_opt.glb'}
+          highlight={hovered}
+        />
       </group>
     </group>
   )
@@ -100,10 +152,10 @@ function SceneContent(props: SceneProps) {
   return (
     <>
       <color attach="background" args={['#030303']} />
-      <fogExp2 attach="fog" args={['#030303', 0.1]} />
+      <fogExp2 attach="fog" args={['#030303', 0.055]} />
 
       <Environment
-        files={`${BASE}assets/dark_autumn_forest_1k.hdr`}
+        files={BASE + 'assets/dark_autumn_forest_1k.hdr'}
         background={false}
         environmentIntensity={0.2}
       />
@@ -111,8 +163,8 @@ function SceneContent(props: SceneProps) {
       <ambientLight intensity={0.1} />
 
       <spotLight
-        position={[0, 5, 0]}
-        angle={0.6}
+        position={[0, 4.5, 0]}
+        angle={0.55}
         penumbra={1}
         intensity={10}
         color="#88bbff"
@@ -122,13 +174,14 @@ function SceneContent(props: SceneProps) {
 
       <directionalLight
         color="#516b92"
-        intensity={0.75}
+        intensity={0.65}
         position={[-5, 7, 4]}
       />
 
-      {/* Existing forest GLB: deliberately kept at a texture-safe scale. */}
-      <group position={[0, 0, 0]} rotation={[0, 0, 0]} scale={2}>
-        <Model path={`${BASE}assets/forest_web.glb`} />
+      {/* Prefer the original high-resolution asset; the boundary keeps the
+          published scene alive until forest.glb is added to public/assets. */}
+      <group position={[0, 0, 0]} scale={1.5}>
+        <ForestGround />
       </group>
 
       {trees.map((tree) => (
@@ -138,7 +191,7 @@ function SceneContent(props: SceneProps) {
           scale={tree.scale}
           rotation={[0, tree.rotation, 0]}
         >
-          <Model path={`${BASE}assets/tree_web.glb`} />
+          <Model path={BASE + 'assets/tree_web.glb'} />
         </group>
       ))}
 
@@ -149,12 +202,20 @@ function SceneContent(props: SceneProps) {
           scale={rock.scale}
           rotation={[0, rock.rotation, 0]}
         >
-          <Model path={`${BASE}assets/rocks_web.glb`} />
+          <Model path={BASE + 'assets/rocks_web.glb'} />
         </group>
       ))}
 
-      <CentralStone {...props} />
-      <CameraRig isPlayerOpen={props.isPlayerOpen} />
+      <CentralStone
+        isPlayerOpen={props.isPlayerOpen}
+        onPlayerOpenChange={props.onPlayerOpenChange}
+      />
+
+      <CameraRig
+        isPlayerOpen={props.isPlayerOpen}
+        onScrollStateChange={props.onScrollStateChange}
+      />
+
       <PostFX />
     </>
   )
@@ -163,11 +224,20 @@ function SceneContent(props: SceneProps) {
 export function Scene(props: SceneProps) {
   return (
     <Canvas
-      camera={{ position: [2, 1.5, 10], fov: 50, near: 0.1, far: 200 }}
+      camera={{
+        position: [0, 1.6, 8],
+        fov: 50,
+        near: 0.1,
+        far: 200,
+      }}
       dpr={[1, 1.5]}
       frameloop="always"
       shadows
-      gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
+      gl={{
+        antialias: true,
+        alpha: false,
+        powerPreference: 'high-performance',
+      }}
       style={{
         position: 'fixed',
         inset: 0,
@@ -179,7 +249,18 @@ export function Scene(props: SceneProps) {
       }}
     >
       <Suspense fallback={null}>
-        <SceneContent {...props} />
+        <ScrollControls
+          pages={3}
+          damping={0.18}
+          enabled={!props.isPlayerOpen}
+          style={{
+            overflowY: props.isPlayerOpen ? 'hidden' : 'auto',
+            overflowX: 'hidden',
+            scrollbarWidth: 'none',
+          }}
+        >
+          <SceneContent {...props} />
+        </ScrollControls>
       </Suspense>
     </Canvas>
   )
