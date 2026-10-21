@@ -49,14 +49,22 @@ function CameraRig({
     }
 
     const progress = scrollProgress
-    const targetY = MathUtils.lerp(15, 1.5, progress)
-    const targetZ = MathUtils.lerp(15, 5, progress)
+    const targetY = isPlayerOpen
+      ? camera.position.y
+      : MathUtils.lerp(15, 1.5, progress)
+    const targetZ = isPlayerOpen
+      ? camera.position.z
+      : MathUtils.lerp(15, 5, progress)
 
-    targetLookAt.set(
-      0,
-      MathUtils.lerp(0, 1, progress),
-      MathUtils.lerp(0, 2, progress),
-    )
+    if (isPlayerOpen) {
+      targetLookAt.copy(currentLookAt)
+    } else {
+      targetLookAt.set(
+        0,
+        MathUtils.lerp(0, 1, progress),
+        MathUtils.lerp(0, 2, progress),
+      )
+    }
 
     camera.position.x = 0
     camera.position.y = MathUtils.damp(camera.position.y, targetY, 2.6, delta)
