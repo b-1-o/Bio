@@ -66,10 +66,6 @@ export function Sidebar({ onPlayerOpen }: SidebarProps) {
           <span className="sidebar__nav-number">03</span>
           <span>About</span>
         </a>
-        <a href="#contact">
-          <span className="sidebar__nav-number">04</span>
-          <span>Contact</span>
-        </a>
       </nav>
 
       <div className="sidebar__bottom">
