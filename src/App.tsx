@@ -3,7 +3,6 @@ import { motion } from 'framer-motion'
 import profilePortrait from '../assets/Gemini_Generated_Image_uf7b7uuf7b7uuf7b.jpeg'
 import { Cursor } from './components/Cursor'
 import { SmoothScroll } from './components/SmoothScroll'
-import GlitchText from './components/reactbits/GlitchText'
 import Noise from './components/reactbits/Noise'
 import { PlayerUI } from './ui/PlayerUI'
 import { Sidebar } from '../app/components/Sidebar'
@@ -12,17 +11,6 @@ import TerminalRain from '../app/components/ui/TerminalRain'
 import GradientWaves from '../app/components/ui/GradientWaves'
 import ReflectiveCard from '../app/components/ui/ReflectiveCard'
 import './App.css'
-
-const technologies = [
-  { number: '01', name: 'React', note: 'Component systems' },
-  { number: '02', name: 'Remix / React Router', note: 'Routing and web fundamentals' },
-  { number: '03', name: 'Three.js', note: 'Real-time 3D on the web' },
-  { number: '04', name: 'Framer Motion', note: 'Motion with intention' },
-  { number: '05', name: 'TypeScript', note: 'Predictable interfaces' },
-  { number: '06', name: 'Tailwind CSS', note: 'Utility-first styling' },
-  { number: '07', name: 'Lenis', note: 'Smooth scroll behaviour' },
-  { number: '08', name: 'Vite', note: 'Fast frontend tooling' },
-]
 
 function ArrowIcon({ diagonal = true }: { diagonal?: boolean }) {
   return (
@@ -144,18 +132,6 @@ export default function App() {
             <p className="hero__kicker">
               <span className="status-dot" /> INDEPENDENT DEVELOPER <i>///</i> INTERFACE ENGINEER
             </p>
-            <GlitchText
-              className="hero__monogram"
-              trigger="hover"
-              mode="slices"
-              color="#f5f5f5"
-              shadowColors={['#a3a3a3', '#404040']}
-              intensity={0.18}
-              speed={0.42}
-              enableOnHover
-            >
-              B-1-O / 0xB10
-            </GlitchText>
             <h1 id="hero-title" className="hero__title">
               <span>Developer</span>
               <b>+</b>
@@ -219,171 +195,37 @@ export default function App() {
 
         <Projects />
 
-        {/* ABOUT + ReflectiveCard */}
-        <section className="about-section section-wrap" id="about">
-          <div className="section-heading section-heading--about">
-            <div>
-              <p className="section-eyebrow">02 / PROFILE FILE</p>
-              <h2>
-                Hi there<span>.</span>
-              </h2>
-            </div>
-            <p>Curious by nature. Strange by design.</p>
-          </div>
-
-          <div className="about-layout">
-            <div className="about-portrait">
-              <div className="about-portrait__top">
-                <span>SUBJECT / 0xB10</span>
-                <span>PROFILE 001</span>
-              </div>
-
-              {client ? (
-                <ReflectiveCard
-                  theme="dark"
-                  tint="#ffffff"
-                  grayscale={1}
-                  metalness={1}
-                  roughness={0.2}
-                  enableTilt
-                  tiltStrength={10}
-                  width="100%"
-                  height={420}
-                  radius={16}
-                  className="about-reflective"
-                >
-                  <div className="about-reflective__inner">
-                    <img
-                      src={profilePortrait}
-                      alt="Monochrome profile artwork for Erik Ghabuzyan"
-                      className="about-reflective__image"
-                    />
-                    <div className="about-reflective__meta">
-                      <span>Erik Ghabuzyan</span>
-                      <span>Frontend Developer</span>
-                    </div>
-                  </div>
-                </ReflectiveCard>
-              ) : (
-                <div className="about-portrait__placeholder" />
-              )}
-
-              <div className="about-portrait__bottom">
-                <span>夜間プログラマー</span>
-                <span>GRAYSCALE / REFLECTIVE</span>
-              </div>
-            </div>
-
-            <div className="about-copy">
-              <span className="about-copy__kanji" aria-hidden="true">
-                プロフィール
-              </span>
-              <p className="about-copy__lead">
-                I'm Erik — a frontend-focused developer who cares about how a product feels as much as how it
-                looks.
-              </p>
-              <p>
-                I work primarily with React, TypeScript, and modern web tooling to make responsive, interactive
-                interfaces. I enjoy the details: motion that has a purpose, accessible interactions, performance
-                that stays out of the way, and layouts that feel deliberate on every screen.
-              </p>
-              <p>
-                Outside the browser, I'm drawn to Linux, late-night coding, underground music, Japanese horror
-                stories and tools that make everyday life a little better. Most of the projects here began as
-                something I wanted to exist — so I made them.
-              </p>
-              <div className="about-signature">
-                <span>— Erik</span>
-                <b>b-1-o</b>
-                <i>FRONTEND / UI ENGINEERING</i>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* TECHNOLOGY */}
-        <section className="technology-section section-wrap" id="technology">
-          <div className="section-heading">
-            <div>
-              <p className="section-eyebrow">03 / TOOLCHAIN</p>
-              <h2>
-                Technology<span>.</span>
-              </h2>
-            </div>
-            <p>Tools I use to shape interfaces, motion and the things behind them.</p>
-          </div>
-
-          <div className="technology-list">
-            {technologies.map((technology) => (
-              <motion.div
-                className="technology-row"
-                key={technology.number}
-                initial={{ opacity: 0, x: -18 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.4 }}
+        {/* PROFILE PORTRAIT */}
+        <section className="about-section section-wrap" id="about" aria-label="Profile portrait">
+          <div className="about-card-wrap">
+            {client ? (
+              <ReflectiveCard
+                theme="dark"
+                tint="#ffffff"
+                grayscale={1}
+                metalness={1}
+                roughness={0.2}
+                blurStrength={0}
+                shine={0.25}
+                glare={0.12}
+                warp={0.3}
+                warpScale={3}
+                bevel={0}
+                enableTilt={true}
+                tiltStrength={7}
+                intro={true}
+                width="100%"
+                height="clamp(360px, 44vw, 560px)"
+                radius={18}
+                className="about-reflective"
               >
-                <span className="technology-row__number">{technology.number}</span>
-                <h3>{technology.name}</h3>
-                <p>{technology.note}</p>
-                <span className="technology-row__mark">↗</span>
-              </motion.div>
-            ))}
-          </div>
-
-          <div className="technology-foot">
-            <span>DAILY STACK</span>
-            <div>
-              {['JavaScript', 'CSS', 'Git', 'Vercel', 'PostgreSQL', 'Three.js', 'Tailwind', 'Lenis'].map(
-                (skill) => (
-                  <span key={skill}>{skill}</span>
-                ),
-              )}
-            </div>
-          </div>
-
-          <div className="font-system">
-            <span>FONT SYSTEM</span>
-            <b>Montserrat</b>
-            <b>Inter</b>
-            <b>Noto Sans JP 900</b>
-          </div>
-        </section>
-
-        {/* CONTACT */}
-        <section className="contact-section section-wrap" id="contact">
-          <div className="contact-panel">
-            <div className="contact-panel__top">
-              <p className="section-eyebrow">04 / OPEN CHANNEL</p>
-              <span>↗</span>
-            </div>
-            <p className="contact-panel__kicker">AVAILABLE FOR INTERESTING FRONTEND WORK</p>
-            <h2>
-              Let's build
-              <br />
-              something <em>worth opening.</em>
-            </h2>
-            <p className="contact-panel__copy">
-              Have an interface to build, a tricky UI problem, or a frontend opportunity? Send a signal.
-            </p>
-            <div className="contact-actions">
-              <a
-                className="button button--white"
-                href="https://www.linkedin.com/in/b1o"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Connect on LinkedIn <ArrowIcon />
-              </a>
-              <a
-                className="button button--outline"
-                href="https://github.com/b-1-o"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Find me on GitHub <GitHubIcon />
-              </a>
-            </div>
+                <img src={profilePortrait} alt="Monochrome profile artwork" className="about-reflective__image" />
+              </ReflectiveCard>
+            ) : (
+              <div className="about-reflective about-reflective--fallback">
+                <img src={profilePortrait} alt="Monochrome profile artwork" className="about-reflective__image" />
+              </div>
+            )}
           </div>
         </section>
 
