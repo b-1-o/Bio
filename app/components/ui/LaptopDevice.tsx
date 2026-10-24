@@ -22,7 +22,7 @@ export default function LaptopDevice({ children, className = '' }: LaptopDeviceP
 
         {/* Screen */}
         <div className="absolute inset-[10px] top-5 overflow-hidden rounded-[6px] bg-[#050505] border border-[#1a1a1a]">
-          <div className="h-full w-full grayscale contrast-110 transition duration-500 group-hover:grayscale-0">
+          <div className="h-full w-full grayscale contrast-110">
             {children ?? (
               <div className="flex h-full items-center justify-center font-mono text-xs text-[#333]">
                 [ NO PREVIEW ]
