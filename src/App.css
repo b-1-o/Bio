@@ -95,6 +95,8 @@
 .about-card-wrap{width:min(100%,460px);margin-inline:auto}
 .about-reflective{width:100%!important;max-width:100%;height:clamp(360px,44vw,560px)}
 .about-reflective .reflective-card__content{padding:0}
+.about-reflective .reflective-card__canvas{z-index:2;opacity:.24;mix-blend-mode:screen;pointer-events:none}
+.about-reflective .reflective-card__rim{z-index:3}
 .about-reflective__image{display:block;width:100%;height:100%;object-fit:cover;object-position:center 42%;filter:grayscale(100%) contrast(1.08);user-select:none;-webkit-user-drag:none}
 .about-reflective--fallback{position:relative;overflow:hidden;border:1px solid #262626;border-radius:18px;background:#111}
 .about-reflective--fallback .about-reflective__image{position:absolute;inset:0}
