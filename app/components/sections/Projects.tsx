@@ -307,7 +307,7 @@ export function Projects() {
 
       <div className="projects-showcase__list">
         {projects.map((project, index) => (
-          <motion.article
+          <motion.div
             key={project.number}
             className={'projects-showcase__item' + (index % 2 === 1 ? ' projects-showcase__item--reverse' : '')}
             variants={rowVariants}
@@ -315,6 +315,7 @@ export function Projects() {
             whileInView="visible"
             viewport={{ once: true, amount: 0.22 }}
             transition={reduceMotion ? { duration: 0 } : undefined}
+            role="article"
             aria-labelledby={'projects-showcase-title-' + project.number}
           >
             <motion.div className="projects-showcase__copy" variants={textVariants} transition={reduceMotion ? { duration: 0 } : undefined}>
@@ -332,7 +333,7 @@ export function Projects() {
             <motion.div className="projects-showcase__visual" variants={deviceVariants} transition={reduceMotion ? { duration: 0 } : undefined}>
               <ProjectDevice project={project} />
             </motion.div>
-          </motion.article>
+          </motion.div>
         ))}
       </div>
 
