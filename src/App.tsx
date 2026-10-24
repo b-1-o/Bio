@@ -1,31 +1,14 @@
 import { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
 import profilePortrait from '../assets/Gemini_Generated_Image_uf7b7uuf7b7uuf7b.jpeg'
 import { Cursor } from './components/Cursor'
-import { SmoothScroll } from './components/SmoothScroll'
 import Noise from './components/reactbits/Noise'
 import { PlayerUI } from './ui/PlayerUI'
 import { Sidebar } from '../app/components/Sidebar'
 import { Projects } from '../app/components/sections/Projects'
 import TerminalRain from '../app/components/ui/TerminalRain'
-import GradientWaves from '../app/components/ui/GradientWaves'
 import ReflectiveCard from '../app/components/ui/ReflectiveCard'
+import { Hero } from './components/Hero'
 import './App.css'
-
-function ArrowIcon({ diagonal = true }: { diagonal?: boolean }) {
-  return (
-    <svg viewBox="0 0 20 20" aria-hidden="true">
-      <path
-        d={diagonal ? 'M5 15 15 5M6 5h9v9' : 'M3 10h13M10 4l6 6-6 6'}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
 
 function GitHubIcon() {
   return (
@@ -76,7 +59,6 @@ export default function App() {
 
   return (
     <main className="portfolio" id="top">
-      <SmoothScroll />
       <Sidebar onPlayerOpen={() => setIsPlayerOpen(true)} />
       <Cursor />
 
@@ -99,82 +81,7 @@ export default function App() {
       />
 
       <div className="main-content">
-        {/* HERO — Swiss + GradientWaves sphere */}
-        <section className="hero" id="details" aria-labelledby="hero-title">
-          {/* GradientWaves as large sphere in the right area */}
-          {client && (
-            <div className="hero-wave-sphere" aria-hidden="true">
-              <GradientWaves
-                horizonColor="#000000"
-                waveColor="#444444"
-                crestColor="#ffffff"
-                backgroundColor="transparent"
-                lightMode={false}
-                speed={1.5}
-                amplitude={3}
-              />
-            </div>
-          )}
-
-          <div className="hero-grid" aria-hidden="true" />
-
-          <div className="hero__topline">
-            <span>ERIK GHABUZYAN / FRONTEND DEVELOPER</span>
-            <span>34° 10' N / LOCAL NODE</span>
-          </div>
-
-          <motion.div
-            className="hero__content"
-            initial={{ opacity: 0, y: 28 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <p className="hero__kicker">
-              <span className="status-dot" /> INDEPENDENT DEVELOPER <i>///</i> INTERFACE ENGINEER
-            </p>
-            <h1 id="hero-title" className="hero__title">
-              <span>Developer</span>
-              <b>+</b>
-              <em>Geek</em>
-            </h1>
-            <p className="hero__description">
-              I build thoughtful interfaces, personal software and little digital worlds. Frontend-first,
-              terminal-raised, always curious about what happens when design meets code.
-            </p>
-            <div className="hero__actions">
-              <a className="button button--white" href="#projects">
-                Explore selected work <ArrowIcon diagonal={false} />
-              </a>
-              <a
-                className="button button--text"
-                href="https://github.com/b-1-o"
-                target="_blank"
-                rel="noreferrer"
-              >
-                View GitHub <ArrowIcon />
-              </a>
-            </div>
-          </motion.div>
-
-          <div className="hero__index" aria-hidden="true">
-            <span>DESIGN / CODE / DETAIL</span>
-            <span>SCROLL TO EXPLORE ↓</span>
-          </div>
-          <span className="hero__vertical" aria-hidden="true">
-            開発者 + ギーク / B-1-O
-          </span>
-          <div className="hero__coordinates" aria-hidden="true">
-            <span>001</span>
-            <i />
-            <span>HUMAN / MACHINE / INTERFACE</span>
-          </div>
-
-          <div className="hero__micro" aria-hidden="true">
-            <span>v2026.10.24</span>
-            <span>SHA · 0xB10</span>
-            <span>MONOCHROME / 60FPS</span>
-          </div>
-        </section>
+        <Hero />
 
         <div className="ticker" aria-label="Areas of focus">
           <div className="ticker__track">
@@ -208,11 +115,6 @@ export default function App() {
 
           <div className="about-layout">
             <div className="about-portrait">
-              <div className="about-portrait__top">
-                <span>SUBJECT / 0xB10</span>
-                <span>PROFILE 001</span>
-              </div>
-
               <div className="about-portrait__image-wrap">
                 {client ? (
                   <ReflectiveCard
@@ -262,11 +164,6 @@ export default function App() {
                     </div>
                   </div>
                 )}
-              </div>
-
-              <div className="about-portrait__bottom">
-                <span>夜間プログラマー</span>
-                <span>GRAYSCALE / REFLECTIVE</span>
               </div>
             </div>
 
