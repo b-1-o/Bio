@@ -26,8 +26,13 @@ jobs:
           node-version: 22
           cache: npm
 
+      # The existing lockfile drifted from package.json. Reconcile it before
+      # installation so CI does not install an incompatible Vite/plugin set.
+      - name: Regenerate npm lockfile
+        run: npm install --package-lock-only
+
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build React Router SPA
         run: npm run build
