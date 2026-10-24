@@ -168,3 +168,9 @@
 }
 @keyframes art-float{0%,100%{translate:0 0}50%{translate:0 -5px}}
 @media(prefers-reduced-motion:reduce){.art-float,.art-orbit{animation:none!important}.project-visual:hover .art-float{animation:none!important}}
+
+.projects-section .section-heading{margin-bottom:52px}
+.projects-title{margin-top:16px!important;font-size:clamp(46px,7.2vw,101px)!important;font-weight:760!important;letter-spacing:-.09em!important;line-height:.93!important}
+.projects-title em{color:#a3a3a3;font-family:Georgia,"Times New Roman",serif;font-style:italic;font-weight:400;letter-spacing:-.075em}
+.projects-title__period{color:#737373!important}
+@media(max-width:760px){.projects-section .section-heading{margin-bottom:30px}.projects-title{font-size:clamp(43px,10vw,61px)!important}}
