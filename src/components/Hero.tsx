@@ -1,8 +1,9 @@
-import { useEffect, useRef, type MouseEvent } from 'react'
+import { useEffect, useRef, useState, type MouseEvent } from 'react'
+import { Canvas } from '@react-three/fiber'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import GradientWaves from '../../app/components/ui/GradientWaves'
 import { useSmoothScroll } from './useSmoothScroll'
+import { HeroBlob } from './HeroBlob'
 
 function ArrowIcon({ diagonal = true }: { diagonal?: boolean }) {
   return (
@@ -33,16 +34,20 @@ function SplitWord({ word, italic = false }: { word: string; italic?: boolean })
 
 export function Hero() {
   const heroRef = useRef<HTMLElement>(null)
-  const sphereRef = useRef<HTMLDivElement>(null)
+  const visualRef = useRef<HTMLDivElement>(null)
+  const [sceneReady, setSceneReady] = useState(false)
   const { scrollTo } = useSmoothScroll()
 
   useEffect(() => {
+    setSceneReady(true)
+  }, [])
+
+  useEffect(() => {
     const hero = heroRef.current
-    const sphere = sphereRef.current
+    const visual = visualRef.current
     if (!hero) return
 
     gsap.registerPlugin(ScrollTrigger)
-
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
     const context = gsap.context(() => {
@@ -70,10 +75,10 @@ export function Hero() {
         clearProps: 'transform',
       })
 
-      if (sphere) {
-        gsap.to(sphere, {
-          y: 118,
-          scale: 0.93,
+      if (visual) {
+        gsap.to(visual, {
+          y: 95,
+          scale: 0.92,
           opacity: 0,
           ease: 'none',
           scrollTrigger: {
@@ -86,7 +91,6 @@ export function Hero() {
         })
       }
 
-      // Let the hero recede as the next scene approaches.
       gsap.to(hero, {
         scale: 0.965,
         opacity: 0.18,
@@ -111,38 +115,25 @@ export function Hero() {
   }
 
   return (
-    <section ref={heroRef} className="hero" id="details" aria-labelledby="hero-title">
-      <div ref={sphereRef} className="hero-wave-sphere" aria-hidden="true">
-        <GradientWaves
-          horizonColor="#000000"
-          waveColor="#444444"
-          crestColor="#ffffff"
-          backgroundColor="transparent"
-          lightMode={false}
-          speed={1.5}
-          amplitude={3}
-        />
-      </div>
-
+    <section ref={heroRef} className="hero hero--3d" id="details" aria-labelledby="hero-title">
       <div className="hero-grid" aria-hidden="true" />
 
       <div className="hero__topline" data-hero-enter>
         <span>ERIK GHABUZYAN / FRONTEND DEVELOPER</span>
-        <span>34° 10' N / LOCAL NODE</span>
+        <span>INDEPENDENT / ALWAYS BUILDING</span>
       </div>
 
       <div className="hero__content">
         <p className="hero__kicker" data-hero-enter>
-          <span className="status-dot" /> INDEPENDENT DEVELOPER <i>///</i> INTERFACE ENGINEER
+          <span className="status-dot" /> INTERFACES <i>///</i> PERSONAL SOFTWARE
         </p>
-        <h1 id="hero-title" className="hero__title" aria-label="Developer plus Geek">
+        <h1 id="hero-title" className="hero__title" aria-label="Developer + Geek">
           <SplitWord word="Developer" />
           <b className="hero__plus" data-hero-char aria-hidden="true">+</b>
           <SplitWord word="Geek" italic />
         </h1>
         <p className="hero__description" data-hero-enter>
-          I build thoughtful interfaces, personal software and little digital worlds. Frontend-first,
-          terminal-raised, always curious about what happens when design meets code.
+          I build thoughtful interfaces, personal software and little digital worlds. Frontend-first, terminal-raised, always curious about what happens when design meets code.
         </p>
         <div className="hero__actions" data-hero-enter>
           <a className="button button--white" href="#projects" onClick={exploreProjects}>
@@ -157,25 +148,34 @@ export function Hero() {
             View GitHub <ArrowIcon />
           </a>
         </div>
+        <p className="hero__manifesto" data-hero-enter>DESIGN / CODE / DETAIL</p>
+      </div>
+
+      <div
+        ref={visualRef}
+        className="hero__visual"
+        role="img"
+        aria-label="An animated black and white liquid-metal sculpture"
+      >
+        <div className="hero__visual-halo" aria-hidden="true" />
+        {!sceneReady ? (
+          <div className="hero__blob-fallback" aria-hidden="true" />
+        ) : (
+          <Canvas
+            className="hero__canvas"
+            dpr={[1, 1.6]}
+            camera={{ position: [0, 0, 9], fov: 42 }}
+            gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
+          >
+            <HeroBlob />
+          </Canvas>
+        )}
+        <span className="hero__object-label" aria-hidden="true"><i /> FORM / 001</span>
       </div>
 
       <div className="hero__index" data-hero-enter aria-hidden="true">
-        <span>DESIGN / CODE / DETAIL</span>
+        <span>FRONTEND / UI ENGINEERING</span>
         <span>SCROLL TO EXPLORE ↓</span>
-      </div>
-      <span className="hero__vertical" aria-hidden="true">
-        開発者 + ギーク / B-1-O
-      </span>
-      <div className="hero__coordinates" aria-hidden="true">
-        <span>001</span>
-        <i />
-        <span>HUMAN / MACHINE / INTERFACE</span>
-      </div>
-
-      <div className="hero__micro" aria-hidden="true">
-        <span>v2026.10.24</span>
-        <span>SHA · 0xB10</span>
-        <span>MONOCHROME / 60FPS</span>
       </div>
     </section>
   )
