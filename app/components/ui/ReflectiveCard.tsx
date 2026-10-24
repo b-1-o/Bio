@@ -8,6 +8,8 @@ import {
   type CSSProperties,
   type ReactNode,
 } from 'react'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { CheckmarkBadge01Icon, FingerPrintIcon } from '@hugeicons/core-free-icons'
 import './ReflectiveCard.css'
 
 type ReflectiveCardProps = {
@@ -207,7 +209,12 @@ function ReflectiveCard({
             <>
               {(badge || status) && (
                 <div className="reflective-card__header">
-                  {badge && <span className="reflective-card__badge">{badge}</span>}
+                  {badge && (
+                    <span className="reflective-card__badge">
+                      <HugeiconsIcon icon={CheckmarkBadge01Icon} size={16} strokeWidth={1.8} />
+                      {badge}
+                    </span>
+                  )}
                   {status && (
                     <span className="reflective-card__status">
                       <span className="reflective-card__dot" />
@@ -226,7 +233,7 @@ function ReflectiveCard({
                     {idLabel && <span className="reflective-card__label">{idLabel}</span>}
                     {idValue && <span className="reflective-card__value">{idValue}</span>}
                   </div>
-                  <span className="reflective-card__tile">ID</span>
+                  <span className="reflective-card__tile"><HugeiconsIcon icon={FingerPrintIcon} size={22} strokeWidth={1.6} /></span>
                 </div>
               )}
             </>
