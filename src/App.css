@@ -174,3 +174,5 @@
 .projects-title em{color:#a3a3a3;font-family:Georgia,"Times New Roman",serif;font-style:italic;font-weight:400;letter-spacing:-.075em}
 .projects-title__period{color:#737373!important}
 @media(max-width:760px){.projects-section .section-heading{margin-bottom:30px}.projects-title{font-size:clamp(43px,10vw,61px)!important}}
+
+.section-heading h2.projects-title em{color:#a3a3a3;font-family:Georgia,"Times New Roman",serif;font-style:italic;font-weight:400;letter-spacing:-.075em}
