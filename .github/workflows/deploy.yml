@@ -24,29 +24,30 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
 
       - name: Install dependencies
         run: npm install
 
-      - name: Build Vite app
+      - name: Build Remix SPA
         run: npm run build
 
       - name: Verify production output
         run: |
-          test -f dist/index.html
-          test -d dist/assets
-          grep -q '/Bio/assets/' dist/index.html
-          if grep -q '/src/main.tsx' dist/index.html; then
-            echo 'ERROR: source entry leaked into production build'
+          test -f build/client/index.html
+          test -d build/client/assets
+          grep -q '/Bio/assets/' build/client/index.html
+          if grep -q '/src/main.tsx' build/client/index.html; then
+            echo 'ERROR: Vite source entry leaked into production build'
             exit 1
           fi
-          echo 'Production output verified.'
+          echo 'Remix SPA output verified.'
 
-      - name: Deploy dist to gh-pages
+      - name: Deploy static client to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+          publish_dir: ./build/client
           publish_branch: gh-pages
           force_orphan: true
           enable_jekyll: false
