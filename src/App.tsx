@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { PlayerUI } from './ui/PlayerUI'
+import { Scene } from './scene/Scene'
 import './App.css'
 
 type Project = {
@@ -162,6 +163,7 @@ function ProjectCard({ project }: { project: Project }) {
 
 export default function App() {
   const [isPlayerOpen, setIsPlayerOpen] = useState(false)
+  const [sceneProgress, setSceneProgress] = useState(0)
 
   useEffect(() => {
     if (!isPlayerOpen) return
@@ -180,8 +182,33 @@ export default function App() {
     }
   }, [isPlayerOpen])
 
+  useEffect(() => {
+    const updateSceneProgress = () => {
+      const stage = document.getElementById('scene-experience')
+      if (!stage) return
+      const range = Math.max(1, stage.offsetHeight - window.innerHeight)
+      const progress = -stage.getBoundingClientRect().top / range
+      setSceneProgress(Math.max(0, Math.min(1, progress)))
+    }
+
+    updateSceneProgress()
+    window.addEventListener('scroll', updateSceneProgress, { passive: true })
+    window.addEventListener('resize', updateSceneProgress)
+    return () => {
+      window.removeEventListener('scroll', updateSceneProgress)
+      window.removeEventListener('resize', updateSceneProgress)
+    }
+  }, [])
+
+  const sceneStage =
+    sceneProgress < 0.36 ? 'forest' :
+    sceneProgress < 0.46 ? 'veil' :
+    sceneProgress < 0.70 ? 'tree' :
+    sceneProgress < 0.84 ? 'roots' : 'stone'
+
   return (
     <main className="portfolio">
+      <Scene isPlayerOpen={isPlayerOpen} onPlayerOpenChange={setIsPlayerOpen} />
       <header className="site-header">
         <a className="wordmark" href="#top" aria-label="b-1-o home"><span className="wordmark__symbol">b.</span><span className="wordmark__text">b-1-o</span></a>
         <nav className="main-nav" aria-label="Main navigation">
@@ -192,27 +219,69 @@ export default function App() {
         <button className="music-trigger" type="button" onClick={() => setIsPlayerOpen(true)}><span className="music-trigger__icon">♫</span><span>Listen along</span><ArrowIcon /></button>
       </header>
 
-      <section className="hero section-wrap" id="top">
-        <div className="hero-copy">
-          <div className="eyebrow eyebrow--status"><span className="status-light" /> FRONTEND DEVELOPER <span className="eyebrow-divider">/</span> UI ENGINEER</div>
-          <h1>Hey, I'm <span className="hero-name">Erik Ghabuzyan.</span><br />I make the web feel <em>thoughtful.</em></h1>
-          <p className="hero-description">I design and build digital experiences with a focus on clear interfaces, meaningful motion, and the small details that make products feel right.</p>
-          <div className="hero-actions">
-            <a className="button button--light" href="#work">Explore my work <ArrowIcon diagonal={false} /></a>
-            <a className="text-link" href="https://www.linkedin.com/in/b1o" target="_blank" rel="noreferrer">Let's connect <ArrowIcon /></a>
+      <section className="scene-experience" id="scene-experience" aria-label="Interactive 3D introduction">
+        <div className={`scene-sticky scene-sticky--${sceneStage}`}>
+          <div className={`scene-overlay scene-overlay--${sceneStage}`}>
+            <div className="scene-frame scene-frame--top">
+              <span><i className="scene-frame__mark">b.</i> B-1-O / DIGITAL SPACE</span>
+              <span>CALIFORNIA · 2026</span>
+            </div>
+
+            <div className="scene-copy" key={sceneStage} aria-live="polite">
+              {sceneStage === 'forest' && (
+                <>
+                  <p className="scene-copy__eyebrow"><span className="scene-status" /> FRONTEND DEVELOPER <span>/</span> UI ENGINEER</p>
+                  <h1>Hey, I'm Erik.<br />I make the web feel <em>alive.</em></h1>
+                  <p>Thoughtful interfaces, small useful tools, and digital worlds with a little atmosphere.</p>
+                  <div className="scene-copy__actions">
+                    <a className="button button--light" href="#work">Explore my work <ArrowIcon diagonal={false} /></a>
+                    <a className="scene-text-link" href="#about">A little about me <ArrowIcon /></a>
+                  </div>
+                </>
+              )}
+
+              {sceneStage === 'tree' && (
+                <>
+                  <p className="scene-copy__eyebrow">02 — ELSEWHERE ON THE INTERNET</p>
+                  <h2>Outside<br />the <em>code.</em></h2>
+                  <p>Somewhere between projects, music, and the rest of the internet. My links are tucked into the tree.</p>
+                  <div className="scene-copy__actions">
+                    <a className="scene-text-link" href="https://github.com/b-1-o" target="_blank" rel="noreferrer">GitHub <ArrowIcon /></a>
+                    <a className="scene-text-link" href="https://www.instagram.com/__._saint" target="_blank" rel="noreferrer">Instagram <ArrowIcon /></a>
+                  </div>
+                </>
+              )}
+
+              {sceneStage === 'roots' && (
+                <>
+                  <p className="scene-copy__eyebrow">03 — BUILT FROM CURIOSITY</p>
+                  <h2>Every idea<br />has <em>roots.</em></h2>
+                  <p>Most of my projects start with a problem I want to solve for myself — then grow into something real.</p>
+                  <div className="scene-copy__actions">
+                    <a className="button button--light" href="#work">See what I've built <ArrowIcon diagonal={false} /></a>
+                  </div>
+                </>
+              )}
+
+              {sceneStage === 'stone' && (
+                <>
+                  <p className="scene-copy__eyebrow">04 — AFTER HOURS</p>
+                  <h2>A little music<br />for the <em>dark.</em></h2>
+                  <p>A tiny collection of tracks, hidden in the stone. Take a breath and stay for a song.</p>
+                  <div className="scene-copy__actions">
+                    <button className="button button--light" type="button" onClick={() => setIsPlayerOpen(true)}>Open the player <span className="music-trigger__icon">♫</span></button>
+                    <a className="scene-text-link" href="#work">Back to the work <ArrowIcon /></a>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="scene-frame scene-frame--bottom">
+              <span>{sceneStage === 'veil' ? 'A MOMENT BETWEEN WORLDS' : 'SCROLL TO TRAVEL THROUGH THE SCENE'}</span>
+              <span>{String(Math.min(4, Math.floor(sceneProgress * 4) + 1)).padStart(2, '0')} / 04</span>
+            </div>
+            <div className="scene-progress" aria-hidden="true"><span style={{ width: `${sceneProgress * 100}%` }} /></div>
           </div>
-          <div className="hero-meta"><span>BASED IN CALIFORNIA</span><span className="meta-line" /><span>BUILDING IN PUBLIC, ONE IDEA AT A TIME</span></div>
-        </div>
-        <div className="hero-art" aria-label="Abstract monochrome artwork">
-          <div className="hero-art__grid" />
-          <div className="hero-art__halo hero-art__halo--outer" />
-          <div className="hero-art__halo hero-art__halo--middle" />
-          <div className="hero-art__halo hero-art__halo--inner" />
-          <div className="hero-art__orb"><span>b</span></div>
-          <span className="hero-art__cross hero-art__cross--one">+</span>
-          <span className="hero-art__cross hero-art__cross--two">+</span>
-          <div className="hero-art__label hero-art__label--top"><span>INDEPENDENT BUILDER</span><span>CA · 2026</span></div>
-          <div className="hero-art__label hero-art__label--bottom"><span>DESIGN × ENGINEERING</span><span>01 — 04</span></div>
         </div>
       </section>
 

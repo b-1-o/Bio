@@ -278,6 +278,12 @@ function cameraAt(progress: number, routes: Routes) {
 }
 
 function scrollProgress() {
+  const stage = document.getElementById('scene-experience')
+  if (stage) {
+    const scrollable = Math.max(1, stage.offsetHeight - window.innerHeight)
+    return MathUtils.clamp(-stage.getBoundingClientRect().top / scrollable, 0, 1)
+  }
+
   const scrollable = Math.max(1, document.documentElement.scrollHeight - window.innerHeight)
   return MathUtils.clamp(window.scrollY / scrollable, 0, 1)
 }
