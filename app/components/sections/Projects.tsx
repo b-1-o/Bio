@@ -1,4 +1,6 @@
-import { motion } from 'framer-motion'
+import { useEffect, useRef } from 'react'
+import { gsap } from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 type ProjectArt = 'music' | 'docs' | 'jobbrain' | 'shopline'
 
@@ -340,80 +342,144 @@ function ProjectIllustration({ kind }: { kind: ProjectArt }) {
 }
 
 export function Projects() {
+  const sectionRef = useRef<HTMLElement>(null)
+  const viewportRef = useRef<HTMLDivElement>(null)
+  const trackRef = useRef<HTMLDivElement>(null)
+  const progressRef = useRef<HTMLSpanElement>(null)
+
+  useEffect(() => {
+    const section = sectionRef.current
+    const viewport = viewportRef.current
+    const track = trackRef.current
+    if (!section || !viewport || !track) return
+
+    gsap.registerPlugin(ScrollTrigger)
+    const media = gsap.matchMedia()
+
+    media.add('(min-width: 761px) and (prefers-reduced-motion: no-preference)', () => {
+      const horizontalMotion = gsap.to(track, {
+        x: () => -Math.max(0, track.scrollWidth - viewport.clientWidth),
+        ease: 'none',
+        paused: true,
+        overwrite: 'auto',
+      })
+
+      const pin = ScrollTrigger.create({
+        id: 'projects-horizontal-pin',
+        trigger: section,
+        pin: true,
+        animation: horizontalMotion,
+        start: 'top top',
+        end: () => '+=' + Math.max(1, track.scrollWidth - viewport.clientWidth),
+        scrub: 1,
+        anticipatePin: 1,
+        invalidateOnRefresh: true,
+        snap: {
+          snapTo: 1 / (projects.length - 1),
+          duration: { min: 0.16, max: 0.55 },
+          delay: 0.06,
+          ease: 'power1.inOut',
+        },
+        onUpdate: (self) => {
+          if (progressRef.current) gsap.set(progressRef.current, { scaleX: self.progress })
+        },
+      })
+
+      const refreshFrame = window.requestAnimationFrame(() => ScrollTrigger.refresh())
+
+      return () => {
+        window.cancelAnimationFrame(refreshFrame)
+        pin.kill()
+        horizontalMotion.kill()
+      }
+    })
+
+    media.add('(max-width: 760px), (prefers-reduced-motion: reduce)', () => {
+      gsap.set(track, { clearProps: 'transform' })
+      return () => gsap.set(track, { clearProps: 'transform' })
+    })
+
+    return () => media.revert()
+  }, [])
+
   return (
-    <section className="projects-section section-wrap" id="projects" aria-labelledby="projects-title">
-      <div className="section-heading">
-        <div>
-          <p className="section-eyebrow">01 / BUILD ARCHIVE</p>
-          <h2 className="projects-title" id="projects-title">
-            Selected <em>projects</em><span className="projects-title__period">.</span>
-          </h2>
+    <section ref={sectionRef} className="projects-section" id="projects" aria-labelledby="projects-title">
+      <div className="projects-stage">
+        <div className="section-heading projects-heading">
+          <div>
+            <p className="section-eyebrow">01 / BUILD ARCHIVE</p>
+            <h2 className="projects-title" id="projects-title">
+              Selected <em>projects</em><span className="projects-title__period">.</span>
+            </h2>
+          </div>
+          <p>Actual builds, useful experiments and problems I wanted to solve myself.</p>
         </div>
-        <p>Actual builds, useful experiments and problems I wanted to solve myself.</p>
+
+        <div ref={viewportRef} className="projects-viewport" aria-label="Selected projects">
+          <div ref={trackRef} className="project-track">
+            {projects.map((project, index) => (
+              <article key={project.number} className={`project-panel project-panel--${project.art}`} aria-labelledby={`project-title-${project.number}`}>
+                <span className="project-row__kanji" aria-hidden="true">
+                  {index % 2 === 0 ? 'プロジェクト' : '作品記録'}
+                </span>
+
+                <div className="project-copy">
+                  <div className="project-copy__meta">
+                    <span className="section-line" />
+                    <span>{project.number} / 04</span>
+                    <span>{project.category}</span>
+                  </div>
+                  <h3 id={`project-title-${project.number}`}>
+                    {project.name}
+                    <span>.</span>
+                  </h3>
+                  <p className="project-copy__description">{project.description}</p>
+                  <div className="project-stack">
+                    {project.stack.map((tag) => (
+                      <span key={tag}>{tag}</span>
+                    ))}
+                  </div>
+                  <div className="project-actions">
+                    <a className="project-button" href={project.repository} target="_blank" rel="noreferrer">
+                      View repository <ArrowIcon />
+                    </a>
+                    {project.live && (
+                      <a className="project-link" href={project.live} target="_blank" rel="noreferrer">
+                        Open live project <ArrowIcon />
+                      </a>
+                    )}
+                  </div>
+                </div>
+
+                <div className={`project-visual project-visual--${project.art}`}>
+                  <div className="project-visual__topline">
+                    <span>VISUAL STUDY</span>
+                    <span>{project.number} — 04</span>
+                  </div>
+                  <div className="project-art">
+                    <ProjectIllustration kind={project.art} />
+                  </div>
+                  <div className="project-visual__footer">
+                    <span>{project.category.toUpperCase()}</span>
+                    <span>FORM / FUNCTION / DETAIL</span>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+
+        <div className="projects-controls">
+          <a className="section-more" href="https://github.com/b-1-o?tab=repositories" target="_blank" rel="noreferrer">
+            Explore all repositories <ArrowIcon />
+          </a>
+          <div className="project-progress" aria-hidden="true">
+            <span>SCROLL TO EXPLORE</span>
+            <span className="project-progress__track"><span ref={progressRef} /></span>
+            <span>01 — 04</span>
+          </div>
+        </div>
       </div>
-
-      <div className="project-list">
-        {projects.map((project, index) => (
-          <motion.article
-            key={project.number}
-            className="project-row"
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.15 }}
-            transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <span className="project-row__kanji" aria-hidden="true">
-              {index % 2 === 0 ? 'プロジェクト' : '作品記録'}
-            </span>
-
-            <div className="project-copy">
-              <div className="project-copy__meta">
-                <span className="section-line" />
-                <span>{project.number} / 04</span>
-                <span>{project.category}</span>
-              </div>
-              <h3>
-                {project.name}
-                <span>.</span>
-              </h3>
-              <p className="project-copy__description">{project.description}</p>
-              <div className="project-stack">
-                {project.stack.map((tag) => (
-                  <span key={tag}>{tag}</span>
-                ))}
-              </div>
-              <div className="project-actions">
-                <a className="project-button" href={project.repository} target="_blank" rel="noreferrer">
-                  View repository <ArrowIcon />
-                </a>
-                {project.live && (
-                  <a className="project-link" href={project.live} target="_blank" rel="noreferrer">
-                    Open live project <ArrowIcon />
-                  </a>
-                )}
-              </div>
-            </div>
-
-            <div className={`project-visual project-visual--${project.art}`}>
-              <div className="project-visual__topline">
-                <span>VISUAL STUDY</span>
-                <span>{project.number} — 04</span>
-              </div>
-              <div className="project-art">
-                <ProjectIllustration kind={project.art} />
-              </div>
-              <div className="project-visual__footer">
-                <span>{project.category.toUpperCase()}</span>
-                <span>FORM / FUNCTION / DETAIL</span>
-              </div>
-            </div>
-          </motion.article>
-        ))}
-      </div>
-
-      <a className="section-more" href="https://github.com/b-1-o?tab=repositories" target="_blank" rel="noreferrer">
-        Explore all repositories <ArrowIcon />
-      </a>
     </section>
   )
 }

@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { gsap } from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import profilePortrait from '../assets/Gemini_Generated_Image_uf7b7uuf7b7uuf7b.jpeg'
 import { Cursor } from './components/Cursor'
 import Noise from './components/reactbits/Noise'
@@ -34,6 +36,7 @@ function LinkedInIcon() {
 
 export default function App() {
   const [isPlayerOpen, setIsPlayerOpen] = useState(false)
+  const aboutSectionRef = useRef<HTMLElement>(null)
   const [client, setClient] = useState(false)
 
   useEffect(() => {
@@ -56,6 +59,59 @@ export default function App() {
       window.removeEventListener('keydown', closeOnEscape)
     }
   }, [isPlayerOpen])
+
+  useEffect(() => {
+    const about = aboutSectionRef.current
+    if (!about || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+    gsap.registerPlugin(ScrollTrigger)
+
+    const context = gsap.context(() => {
+      gsap.fromTo(
+        about,
+        { yPercent: 8, clipPath: 'inset(10% 0 0 round 26px)' },
+        {
+          yPercent: 0,
+          clipPath: 'inset(0% 0 0 round 0px)',
+          ease: 'none',
+          scrollTrigger: {
+            id: 'about-curtain',
+            trigger: about,
+            start: 'top bottom',
+            end: 'top 24%',
+            scrub: 0.8,
+            invalidateOnRefresh: true,
+          },
+        },
+      )
+
+      const reveals = gsap.utils.toArray<HTMLElement>(
+        '[data-about-reveal]',
+        about,
+      )
+      gsap.fromTo(
+        reveals,
+        { y: 58, autoAlpha: 0, clipPath: 'inset(0 0 18% 0)' },
+        {
+          y: 0,
+          autoAlpha: 1,
+          clipPath: 'inset(0 0 0% 0)',
+          ease: 'power3.out',
+          stagger: 0.14,
+          scrollTrigger: {
+            id: 'about-content-reveal',
+            trigger: about,
+            start: 'top 78%',
+            end: 'top 32%',
+            scrub: 0.8,
+            invalidateOnRefresh: true,
+          },
+        },
+      )
+    }, about)
+
+    return () => context.revert()
+  }, [])
 
   return (
     <main className="portfolio" id="top">
@@ -104,8 +160,8 @@ export default function App() {
 
         {/* PROFILE PORTRAIT */}
         {/* PROFILE */}
-        <section className="about-section section-wrap" id="about" aria-labelledby="about-title">
-          <div className="about-section__heading">
+        <section ref={aboutSectionRef} className="about-section section-wrap" id="about" aria-labelledby="about-title">
+          <div className="about-section__heading" data-about-reveal>
             <p className="section-eyebrow">02 / PROFILE FILE</p>
             <h2 className="about-section__title" id="about-title">
               Hi there<span>.</span>
@@ -114,7 +170,7 @@ export default function App() {
           </div>
 
           <div className="about-layout">
-            <div className="about-portrait">
+            <div className="about-portrait" data-about-reveal>
               <div className="about-portrait__image-wrap">
                 {client ? (
                   <ReflectiveCard
@@ -167,7 +223,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className="about-copy">
+            <div className="about-copy" data-about-reveal>
               <span className="about-copy__kanji" aria-hidden="true">
                 プロフィール
               </span>

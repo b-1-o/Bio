@@ -85,6 +85,21 @@ export function Hero() {
           },
         })
       }
+
+      // Let the hero recede as the next scene approaches.
+      gsap.to(hero, {
+        scale: 0.965,
+        opacity: 0.18,
+        transformOrigin: '50% 0%',
+        ease: 'none',
+        scrollTrigger: {
+          trigger: hero,
+          start: 'top top',
+          end: 'bottom top',
+          scrub: 0.8,
+          invalidateOnRefresh: true,
+        },
+      })
     }, hero)
 
     return () => context.revert()
