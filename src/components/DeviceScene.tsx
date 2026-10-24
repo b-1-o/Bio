@@ -1,7 +1,7 @@
 import { Float } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Suspense, useRef } from 'react'
-import { useInView } from 'framer-motion'
+import { useInView, useScroll, type MotionValue } from 'framer-motion'
 import * as THREE from 'three'
 import { LaptopModel, type ProjectScreen } from './LaptopModel'
 import { PhoneModel } from './PhoneModel'
@@ -11,12 +11,13 @@ type DeviceSceneProps = {
   screen: ProjectScreen
   label: string
 }
-function InteractiveDevice({ kind, screen }: Omit<DeviceSceneProps, 'label'>) {
+function InteractiveDevice({ kind, screen, scrollYProgress }: Omit<DeviceSceneProps, 'label'> & { scrollYProgress: MotionValue<number> }) {
   const group = useRef<THREE.Group>(null)
   useFrame(({ pointer, clock }, delta) => {
     if (!group.current) return
-    const targetY = -0.16 + pointer.x * 0.22
-    const targetX = pointer.y * -0.1
+    const scrollPhase = scrollYProgress.get() - 0.5
+    const targetY = -0.16 + pointer.x * 0.22 + scrollPhase * 0.3
+    const targetX = pointer.y * -0.1 + scrollPhase * 0.12
     group.current.rotation.y = THREE.MathUtils.damp(group.current.rotation.y, targetY, 2.2, delta)
     group.current.rotation.x = THREE.MathUtils.damp(group.current.rotation.x, targetX, 2, delta)
     group.current.position.y = Math.sin(clock.elapsedTime * 0.65) * 0.045
@@ -31,6 +32,7 @@ function InteractiveDevice({ kind, screen }: Omit<DeviceSceneProps, 'label'>) {
 export function DeviceScene({ kind, screen, label }: DeviceSceneProps) {
   const host = useRef<HTMLDivElement>(null)
   const inView = useInView(host, { once: false, margin: '180px' })
+  const { scrollYProgress } = useScroll({ target: host, offset: ['start end', 'end start'] })
   return <div className={'device-stage device-stage--' + kind} ref={host} role="img" aria-label={label}>
     {!inView && <div className="device-stage__placeholder" aria-hidden="true"><span>3D VIEW / STANDBY</span><i /></div>}
     {inView && <Canvas
@@ -43,7 +45,7 @@ export function DeviceScene({ kind, screen, label }: DeviceSceneProps) {
       <directionalLight position={[2.5, 3, 4]} intensity={2.2} color="#ffffff" />
       <directionalLight position={[-3, 0.5, 2]} intensity={0.62} color="#a6a6a6" />
       <directionalLight position={[0, -2, -3]} intensity={0.3} color="#ffffff" />
-      <Suspense fallback={null}><InteractiveDevice kind={kind} screen={screen} /></Suspense>
+      <Suspense fallback={null}><InteractiveDevice kind={kind} screen={screen} scrollYProgress={scrollYProgress} /></Suspense>
     </Canvas>}
     <span className="device-stage__index" aria-hidden="true">FIG. {screen.toUpperCase()} / MONOCHROME</span>
   </div>
