@@ -73,8 +73,8 @@ type Program = { program: WebGLProgram; uniforms: Record<string, WebGLUniformLoc
 
 const DEFAULT_CHARACTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$&*()-_+=/[]{};:<>.,0123456789';
 const DEFAULT_FONT = "ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, 'Liberation Mono', monospace";
-const DARK_COLORS = ['#ffffff', '#61dca3'];
-const LIGHT_COLORS = ['#18181b', '#0f9f6e'];
+const DARK_COLORS = ['#ffffff', '#a3a3a3'];
+const LIGHT_COLORS = ['#181818', '#525252'];
 const MAX_COLORS = 8;
 const INTRO_SECONDS = 1.4;
 const REST_RATE = 0.2;
@@ -251,7 +251,7 @@ const LetterGlitch = ({
   const customColors = Array.isArray(glitchColors) && glitchColors.length ? glitchColors : null;
   const settings: Settings = {
     colors: (customColors || (lightMode ? LIGHT_COLORS : DARK_COLORS)).slice(0, MAX_COLORS),
-    baseColor: baseColor || (lightMode ? '#18181b' : '#ffffff'),
+    baseColor: baseColor || (lightMode ? '#181818' : '#ffffff'),
     characters: characters || DEFAULT_CHARACTERS,
     fontFamily: fontFamily || DEFAULT_FONT,
     fontSize: clamp(fontSize, 6, 96),
