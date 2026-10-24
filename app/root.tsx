@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
 import '../src/index.css'
+import { SmoothScrollProvider } from '../src/components/SmoothScrollProvider'
 
 export const meta = () => [
   { title: 'B-1-O — Developer + Geek' },
@@ -25,7 +26,7 @@ export function Layout({ children }: { children: ReactNode }) {
 }
 
 export default function Root() {
-  return <Outlet />
+  return <SmoothScrollProvider><Outlet /></SmoothScrollProvider>
 }
 
 export function HydrateFallback() {
