@@ -3,4 +3,3 @@
 .section-wrap{width:min(1320px,calc(100% - 120px));margin-inline:auto}
 .section-eyebrow{margin:0;color:#a3a3a3;font-family:var(--mono);font-size:10px;font-weight:400;letter-spacing:.16em;line-height:1.8}
 .section-line{display:inline-block;width:38px;height:1px;background:#a3a3a3}
-/* truncated for this call - will use full in next if needed */
