@@ -1,7 +1,7 @@
-import { vitePlugin as remix } from '@remix-run/dev'
+import { reactRouter } from '@react-router/dev/vite'
 import { defineConfig } from 'vite'
 
 export default defineConfig({
   base: '/Bio/',
-  plugins: [remix({ ssr: false, buildDirectory: 'build' })],
+  plugins: [reactRouter()],
 })
