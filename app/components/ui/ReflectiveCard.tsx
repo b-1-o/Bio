@@ -168,7 +168,7 @@ function ReflectiveCard({
     '--rc-rough': String(clamp(roughness, 0, 1)),
     '--rc-gray': String(clamp(grayscale, 0, 1)),
     '--rc-tint': tint,
-  } as CSSProperties
+  } as unknown as CSSProperties
 
   return (
     <div
