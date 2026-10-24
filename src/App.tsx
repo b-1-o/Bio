@@ -173,39 +173,32 @@ export default function App() {
 
             <div className="about-portrait" data-about-reveal>
               <span className="about-portrait__glow" aria-hidden="true" />
-              {client ? (
-                <ReflectiveCard
-                  name="Erik"
-                  role="FRONTEND / UI ENGINEERING"
-                  badge=""
-                  status=""
-                  idLabel=""
-                  idValue=""
-                  theme="dark"
-                  tint="#ffffff"
-                  metalness={1}
-                  roughness={0}
-                  blurStrength={0}
-                  shine={0.15}
-                  glare={0}
-                  warp={0.3}
-                  warpScale={3}
-                  bevel={0}
-                  enableTilt
-                  tiltStrength={7}
-                  intro
-                  width="min(100%, 390px)"
-                  height="clamp(420px, 42vw, 500px)"
-                  radius={18}
-                  className="about-reflective"
-                />
-              ) : (
-                <div className="about-reflective-fallback">
-                  <span>Erik</span>
-                  <small>FRONTEND / UI ENGINEERING</small>
-                </div>
-              )}
-            </div>
+              <ReflectiveCard
+                name="Erik"
+                role="FRONTEND / UI ENGINEERING"
+                badge=""
+                status=""
+                idLabel=""
+                idValue=""
+                theme="dark"
+                tint="#ffffff"
+                metalness={1}
+                roughness={0}
+                blurStrength={0}
+                shine={0.15}
+                glare={0}
+                warp={0.3}
+                warpScale={3}
+                bevel={0}
+                enableTilt
+                tiltStrength={7}
+                intro
+                width="min(100%, 390px)"
+                height="clamp(420px, 42vw, 500px)"
+                radius={18}
+                className="about-reflective"
+              />
+            </div>      </div>
           </div>
         </section>
 
