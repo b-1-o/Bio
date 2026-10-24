@@ -12,7 +12,7 @@ function InstagramIcon() {
 
 export function Sidebar({ onPlayerOpen }: SidebarProps) {
   return <aside className="sidebar" aria-label="Main navigation">
-    <a className="sidebar__brand" href="#top" aria-label="B-1-O home"><span>b.</span><i>個人</i></a>
+    <a className="sidebar__brand" href="#top" aria-label="B-1-O home"><svg className="sidebar__brand-mark" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="16" fill="none" stroke="currentColor" strokeWidth="1" /><text x="18" y="23.5" textAnchor="middle" fill="currentColor" fontFamily="Montserrat, Arial, sans-serif" fontSize="17" fontWeight="800">b.</text></svg><i>個人</i></a>
     <nav className="sidebar__nav">
       <a href="#details"><span className="sidebar__nav-number">01</span><span>Details</span></a>
       <a href="#projects"><span className="sidebar__nav-number">02</span><span>Projects</span></a>
