@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import profilePortrait from '../assets/Gemini_Generated_Image_uf7b7uuf7b7uuf7b.jpeg'
 import { Cursor } from './components/Cursor'
 import Noise from './components/reactbits/Noise'
 import { PlayerUI } from './ui/PlayerUI'
@@ -158,94 +157,54 @@ export default function App() {
 
         <Projects />
 
-        {/* PROFILE PORTRAIT */}
-        {/* PROFILE */}
         <section ref={aboutSectionRef} className="about-section section-wrap" id="about" aria-labelledby="about-title">
           <div className="about-section__heading" data-about-reveal>
             <p className="section-eyebrow">02 / PROFILE FILE</p>
-            <h2 className="about-section__title" id="about-title">
-              Hi there<span>.</span>
-            </h2>
+            <h2 className="about-section__title" id="about-title">Hi there<span>.</span></h2>
             <p className="about-section__tagline">Curious by nature. Strange by design.</p>
           </div>
 
           <div className="about-layout">
-            <div className="about-portrait" data-about-reveal>
-              <div className="about-portrait__image-wrap">
-                {client ? (
-                  <ReflectiveCard
-                    theme="dark"
-                    tint="#ffffff"
-                    grayscale={1}
-                    metalness={1}
-                    roughness={0.2}
-                    blurStrength={0}
-                    shine={0.25}
-                    glare={0.12}
-                    warp={0.3}
-                    warpScale={3}
-                    bevel={0}
-                    enableTilt
-                    tiltStrength={7}
-                    intro
-                    width="100%"
-                    height="100%"
-                    radius={16}
-                    className="about-reflective"
-                  >
-                    <div className="about-reflective__inner">
-                      <img
-                        src={profilePortrait}
-                        alt="Monochrome profile artwork"
-                        className="about-reflective__image"
-                      />
-                      <div className="about-reflective__meta">
-                        <span>Erik Ghabuzyan</span>
-                        <span>Frontend Developer</span>
-                      </div>
-                    </div>
-                  </ReflectiveCard>
-                ) : (
-                  <div className="about-reflective about-reflective--fallback">
-                    <div className="about-reflective__inner">
-                      <img
-                        src={profilePortrait}
-                        alt="Monochrome profile artwork"
-                        className="about-reflective__image"
-                      />
-                      <div className="about-reflective__meta">
-                        <span>Erik Ghabuzyan</span>
-                        <span>Frontend Developer</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+            <div className="about-copy" data-about-reveal>
+              <span className="about-copy__kanji" aria-hidden="true">プロフィール</span>
+              <p>I'm Erik — a frontend-focused developer who cares about how a product feels as much as how it looks. I work primarily with React, TypeScript, and modern web tooling to make responsive, interactive interfaces. I enjoy the details: motion that has a purpose, accessible interactions, performance that stays out of the way, and layouts that feel deliberate on every screen. Outside the browser, I'm drawn to Linux, late-night coding, underground music, Japanese horror stories and tools that make everyday life a little better. Most of the projects here began as something I wanted to exist — so I made them.</p>
+              <div className="about-signature">— Erik, b-1-o, FRONTEND / UI ENGINEERING</div>
             </div>
 
-            <div className="about-copy" data-about-reveal>
-              <span className="about-copy__kanji" aria-hidden="true">
-                プロフィール
-              </span>
-              <p className="about-copy__lead">
-                I'm Erik — a frontend-focused developer who cares about how a product feels as much as how it
-                looks.
-              </p>
-              <p>
-                I work primarily with React, TypeScript, and modern web tooling to make responsive, interactive
-                interfaces. I enjoy the details: motion that has a purpose, accessible interactions, performance
-                that stays out of the way, and layouts that feel deliberate on every screen.
-              </p>
-              <p>
-                Outside the browser, I'm drawn to Linux, late-night coding, underground music, Japanese horror
-                stories and tools that make everyday life a little better. Most of the projects here began as
-                something I wanted to exist — so I made them.
-              </p>
-              <div className="about-signature">
-                <span>— Erik</span>
-                <b>b-1-o</b>
-                <i>FRONTEND / UI ENGINEERING</i>
-              </div>
+            <div className="about-portrait" data-about-reveal>
+              <span className="about-portrait__glow" aria-hidden="true" />
+              {client ? (
+                <ReflectiveCard
+                  name="Erik"
+                  role="FRONTEND / UI ENGINEERING"
+                  badge=""
+                  status=""
+                  idLabel=""
+                  idValue=""
+                  theme="dark"
+                  tint="#ffffff"
+                  metalness={1}
+                  roughness={0}
+                  blurStrength={0}
+                  shine={0.15}
+                  glare={0}
+                  warp={0.3}
+                  warpScale={3}
+                  bevel={0}
+                  enableTilt
+                  tiltStrength={7}
+                  intro
+                  width="min(100%, 390px)"
+                  height="clamp(420px, 42vw, 500px)"
+                  radius={18}
+                  className="about-reflective"
+                />
+              ) : (
+                <div className="about-reflective-fallback">
+                  <span>Erik</span>
+                  <small>FRONTEND / UI ENGINEERING</small>
+                </div>
+              )}
             </div>
           </div>
         </section>
