@@ -95,7 +95,7 @@ const drawHair = (ctx: CanvasRenderingContext2D, width: number, height: number) 
   const ey = y + Math.sin(angle) * length;
   const cx = (x + ex) / 2 - Math.sin(angle) * bend;
   const cy = (y + ey) / 2 + Math.cos(angle) * bend;
-  ctx.strokeStyle = `rgba(16, 12, 9, ${0.4 + Math.random() * 0.35})`;
+  ctx.strokeStyle = `rgba(16, 16, 16, ${0.4 + Math.random() * 0.35})`;
   ctx.lineWidth = 0.6 + Math.random() * 0.7;
   ctx.lineCap = 'round';
   ctx.beginPath();
@@ -188,7 +188,7 @@ const Noise = ({
             Math.random() * width,
             Math.random() * height,
             0.6 + Math.random() ** 2.5 * 3.4,
-            light ? '255, 250, 240' : '18, 14, 10',
+            light ? '255, 255, 255' : '18, 18, 18',
             0.6 + Math.random() * 0.35
           );
         }
@@ -217,7 +217,7 @@ const Noise = ({
       scratchList.forEach(scratch => {
         const fade = Math.min(1, scratch.age / 0.15, (scratch.life - scratch.age) / 0.3);
         const alpha = (0.25 + Math.random() * 0.35) * fade;
-        ctx.strokeStyle = scratch.light ? `rgba(255, 252, 245, ${alpha})` : `rgba(14, 11, 8, ${alpha})`;
+        ctx.strokeStyle = scratch.light ? `rgba(255, 255, 255, ${alpha})` : `rgba(14, 14, 14, ${alpha})`;
         ctx.lineWidth = scratch.weight;
         ctx.beginPath();
         for (let y = 0; y <= height; y += 24) {
