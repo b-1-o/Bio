@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { PlayerUI } from './ui/PlayerUI'
 import { Scene } from './scene/Scene'
+import AeroShards from './components/AeroShards.jsx'
+import { SignalRain } from './ui/SignalRain'
 import './App.css'
 
 type Project = {
@@ -164,6 +166,7 @@ function ProjectCard({ project }: { project: Project }) {
 export default function App() {
   const [isPlayerOpen, setIsPlayerOpen] = useState(false)
   const [sceneProgress, setSceneProgress] = useState(0)
+  const [aeroUnavailable, setAeroUnavailable] = useState(false)
 
   useEffect(() => {
     if (!isPlayerOpen) return
@@ -209,6 +212,7 @@ export default function App() {
   return (
     <main className="portfolio">
       <Scene isPlayerOpen={isPlayerOpen} onPlayerOpenChange={setIsPlayerOpen} />
+      <SignalRain />
       <header className="site-header">
         <a className="wordmark" href="#top" aria-label="b-1-o home"><span className="wordmark__symbol">b.</span><span className="wordmark__text">b-1-o</span></a>
         <nav className="main-nav" aria-label="Main navigation">
@@ -221,18 +225,71 @@ export default function App() {
 
       <section className="scene-experience" id="scene-experience" aria-label="Interactive 3D introduction">
         <div className={`scene-sticky scene-sticky--${sceneStage}`}>
+          {!aeroUnavailable && (
+            <AeroShards
+              shardColor="#777772"
+              accentColor="#f2f1ed"
+              backgroundColor="transparent"
+              placement="full"
+              material="glass"
+              markers="plus"
+              count={1150}
+              shardSize={0.88}
+              spread={0.88}
+              twist={0.9}
+              billow={1.05}
+              speed={0.52}
+              depthOfField={0.72}
+              glow={0.42}
+              grain={0.09}
+              vignette={0.46}
+              mouseInteraction
+              mouseStrength={0.38}
+              parallax={0.24}
+              pulseOnClick
+              holdToGather={false}
+              dpr={1.25}
+              paused={sceneProgress >= 0.99}
+              onError={() => setAeroUnavailable(true)}
+              className="scene-aero-shards"
+            />
+          )}
+          {aeroUnavailable && <div className="scene-aero-fallback" aria-hidden="true" />}
           <div className={`scene-overlay scene-overlay--${sceneStage}`}>
             <div className="scene-frame scene-frame--top">
-              <span><i className="scene-frame__mark">b.</i> B-1-O / DIGITAL SPACE</span>
-              <span>CALIFORNIA · 2026</span>
+              <span><i className="scene-frame__mark">b.</i> 夜行端末 / B-1-O</span>
+              <span>フロントエンド · NIGHT SHIFT</span>
+            </div>
+
+            <aside className={`operator-console${sceneStage === 'forest' ? ' operator-console--active' : ''}`} aria-label="B-1-O developer profile">
+              <div className="operator-console__head"><span>USER / 0xB10</span><span><i /> ONLINE</span></div>
+              <div className="operator-console__main">
+                <div className="operator-avatar" aria-hidden="true">
+                  <div className="operator-avatar__hood"><div className="operator-avatar__face"><i /><i /></div></div>
+                  <span className="operator-avatar__symbol">λ</span>
+                </div>
+                <div className="operator-console__identity">
+                  <b>夜間プログラマー</b>
+                  <span>NIGHT-SHIFT DEVELOPER</span>
+                  <span>REACT // TYPESCRIPT</span>
+                  <span>LINUX / TERMINAL</span>
+                </div>
+              </div>
+              <div className="operator-console__footer"><span>PROFILE_FRAGMENT_01</span><span>0101: B10</span></div>
+            </aside>
+
+            <div className="scene-telemetry" aria-hidden="true">
+              <span>未確認信号 <i>•••</i></span>
+              <span>PROCESS: NIGHT_SHIFT</span>
+              <span>MEMORY / 0xB10 / 霧</span>
             </div>
 
             <div className="scene-copy" key={sceneStage} aria-live="polite">
               {sceneStage === 'forest' && (
                 <>
-                  <p className="scene-copy__eyebrow"><span className="scene-status" /> FRONTEND DEVELOPER <span>/</span> UI ENGINEER</p>
-                  <h1>Hey, I'm Erik.<br />I make the web feel <em>alive.</em></h1>
-                  <p>Thoughtful interfaces, small useful tools, and digital worlds with a little atmosphere.</p>
+                  <p className="scene-copy__eyebrow"><span className="scene-status" /> フロントエンド開発者 <span>/</span> FRONTEND GEEK</p>
+                  <h1>Erik Ghabuzyan.<br />I build things <em>after dark.</em></h1>
+                  <p>Terminal dweller. Interface obsessive. I build strange little digital worlds, private tools, and things that probably started as one more late-night idea.</p>
                   <div className="scene-copy__actions">
                     <a className="button button--light" href="#work">Explore my work <ArrowIcon diagonal={false} /></a>
                     <a className="scene-text-link" href="#about">A little about me <ArrowIcon /></a>
@@ -242,9 +299,9 @@ export default function App() {
 
               {sceneStage === 'tree' && (
                 <>
-                  <p className="scene-copy__eyebrow">02 — ELSEWHERE ON THE INTERNET</p>
-                  <h2>Outside<br />the <em>code.</em></h2>
-                  <p>Somewhere between projects, music, and the rest of the internet. My links are tucked into the tree.</p>
+                  <p className="scene-copy__eyebrow">02 — ネットの向こう / UNKNOWN SIGNAL</p>
+                  <h2>Somewhere<br />beyond the <em>signal.</em></h2>
+                  <p>Social accounts are hidden in the tree. If the signal holds, follow the lights — not everything online wants to be found.</p>
                   <div className="scene-copy__actions">
                     <a className="scene-text-link" href="https://github.com/b-1-o" target="_blank" rel="noreferrer">GitHub <ArrowIcon /></a>
                     <a className="scene-text-link" href="https://www.instagram.com/__._saint" target="_blank" rel="noreferrer">Instagram <ArrowIcon /></a>
@@ -254,9 +311,9 @@ export default function App() {
 
               {sceneStage === 'roots' && (
                 <>
-                  <p className="scene-copy__eyebrow">03 — BUILT FROM CURIOSITY</p>
-                  <h2>Every idea<br />has <em>roots.</em></h2>
-                  <p>Most of my projects start with a problem I want to solve for myself — then grow into something real.</p>
+                  <p className="scene-copy__eyebrow">03 — コードの記録 / BUILD LOG</p>
+                  <h2>Every glitch<br />leaves a <em>trace.</em></h2>
+                  <p>Each project starts with a problem, a terminal, and a little stubborn curiosity. Scroll on to read the logs.</p>
                   <div className="scene-copy__actions">
                     <a className="button button--light" href="#work">See what I've built <ArrowIcon diagonal={false} /></a>
                   </div>
@@ -265,9 +322,9 @@ export default function App() {
 
               {sceneStage === 'stone' && (
                 <>
-                  <p className="scene-copy__eyebrow">04 — AFTER HOURS</p>
-                  <h2>A little music<br />for the <em>dark.</em></h2>
-                  <p>A tiny collection of tracks, hidden in the stone. Take a breath and stay for a song.</p>
+                  <p className="scene-copy__eyebrow">04 — 深夜の信号 / AFTER HOURS</p>
+                  <h2>Something<br />is playing <em>below.</em></h2>
+                  <p>The stone keeps a small music archive. No algorithm, no feed — just sound in the dark.</p>
                   <div className="scene-copy__actions">
                     <button className="button button--light" type="button" onClick={() => setIsPlayerOpen(true)}>Open the player <span className="music-trigger__icon">♫</span></button>
                     <a className="scene-text-link" href="#work">Back to the work <ArrowIcon /></a>
@@ -277,7 +334,7 @@ export default function App() {
             </div>
 
             <div className="scene-frame scene-frame--bottom">
-              <span>{sceneStage === 'veil' ? 'A MOMENT BETWEEN WORLDS' : 'SCROLL TO TRAVEL THROUGH THE SCENE'}</span>
+              <span>{sceneStage === 'veil' ? '境界信号 // SIGNAL LOST' : 'スクロールして記録を開く / SCROLL TO DECODE'}</span>
               <span>{String(Math.min(4, Math.floor(sceneProgress * 4) + 1)).padStart(2, '0')} / 04</span>
             </div>
             <div className="scene-progress" aria-hidden="true"><span style={{ width: `${sceneProgress * 100}%` }} /></div>
@@ -289,7 +346,7 @@ export default function App() {
 
       <section className="work-section section-wrap" id="work">
         <div className="section-heading">
-          <div><p className="eyebrow">A FEW THINGS I'VE MADE</p><h2>Selected work<span className="section-period">.</span></h2></div>
+          <div><p className="eyebrow">作品ログ / BUILD ARCHIVE</p><h2>Selected work<span className="section-period">.</span></h2></div>
           <p className="section-intro">Personal projects, useful experiments, and ideas turned into something you can use.</p>
         </div>
         <div className="projects-grid">{projects.map((project) => <ProjectCard key={project.number} project={project} />)}</div>
@@ -298,19 +355,19 @@ export default function App() {
 
       <section className="about-section" id="about">
         <div className="about-inner section-wrap">
-          <div className="about-heading"><p className="eyebrow">A LITTLE ABOUT ME</p><h2>Curious by nature.<br /><em>Intentional by design.</em></h2></div>
-          <div className="about-copy"><p className="about-lead">I'm a frontend-focused developer who enjoys turning complicated ideas into interfaces that feel simple, fast, and considered.</p><p>I work primarily with React, TypeScript, and modern web tooling. I care about how a product behaves as much as how it looks — from responsive layouts and accessibility to animation, performance, and the last few pixels.</p><p>Most of what you see here started as a problem I wanted to solve for myself. Building these projects is how I learn, experiment, and get better at the craft.</p><div className="about-signature">— Erik <span>b-1-o</span></div></div>
+          <div className="about-heading"><p className="eyebrow">開発者の記録 / OPERATOR FILE</p><h2>Curious by nature.<br /><em>Strange by design.</em></h2></div>
+          <div className="about-copy"><p className="about-lead">I'm a frontend-focused developer who likes interfaces with intent, strange atmospheres, and systems that feel good to use. My natural habitat is somewhere between a browser tab, a terminal, and a project that got a little out of hand.</p><p>I work primarily with React, TypeScript, and modern web tooling. I care about how a product behaves as much as how it looks — from responsive layouts and accessibility to animation, performance, and the last few pixels.</p><p>Most projects here began as a personal itch I needed to scratch. I enjoy exploring Linux, tuning details, writing UI until it feels right, and building the tools I wish already existed.</p><div className="about-signature">— Erik <span>b-1-o</span></div></div>
         </div>
       </section>
 
       <section className="stack-section section-wrap">
-        <div className="stack-heading"><p className="eyebrow">TOOLS OF THE TRADE</p><h2>My everyday stack</h2></div>
+        <div className="stack-heading"><p className="eyebrow">使用技術 / TOOLCHAIN</p><h2>My everyday stack</h2></div>
         <div className="skills-list">{skills.map((skill, index) => <span className="skill-chip" key={skill}><i>{String(index + 1).padStart(2, '0')}</i>{skill}</span>)}</div>
       </section>
 
       <section className="contact-section section-wrap" id="connect">
         <div className="contact-card">
-          <div className="contact-card__top"><p className="eyebrow">HAVE SOMETHING IN MIND?</p><span className="contact-mark">↗</span></div>
+          <div className="contact-card__top"><p className="eyebrow">接続要求 / INCOMING SIGNAL</p><span className="contact-mark">↗</span></div>
           <h2>Good things start<br />with a <em>conversation.</em></h2>
           <p>Have a project, an idea, or an opportunity in frontend development? I'd be glad to hear about it.</p>
           <div className="contact-actions">
