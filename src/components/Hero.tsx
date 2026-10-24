@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type MouseEvent } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import GradientWaves from '../../app/components/ui/GradientWaves'
@@ -90,7 +90,7 @@ export function Hero() {
     return () => context.revert()
   }, [])
 
-  const exploreProjects = (event: React.MouseEvent<HTMLAnchorElement>) => {
+  const exploreProjects = (event: MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault()
     scrollTo('#projects', { offset: -12, duration: 1.25 })
   }
