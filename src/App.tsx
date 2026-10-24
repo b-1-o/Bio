@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import profilePortrait from '../assets/Gemini_Generated_Image_uf7b7uuf7b7uuf7b.jpeg'
 import { Cursor } from './components/Cursor'
-import { HeroBackground } from './components/HeroBackground'
 import { SmoothScroll } from './components/SmoothScroll'
 import GlitchText from './components/reactbits/GlitchText'
 import Noise from './components/reactbits/Noise'
@@ -10,6 +9,7 @@ import PixelTransition from './components/reactbits/PixelTransition'
 import { PlayerUI } from './ui/PlayerUI'
 import { Sidebar } from '../app/components/Sidebar'
 import { Projects } from '../app/components/sections/Projects'
+import { HeroScene } from '../app/components/3d/HeroScene'
 import './App.css'
 
 const technologies = [
@@ -87,22 +87,26 @@ export default function App() {
       <Cursor />
       <Noise
         fixed
-        opacity={0.035}
+        opacity={0.03}
         size={1}
         fps={12}
         blendMode="soft-light"
-        contrast={0.2}
-        dust={0.035}
+        contrast={0.18}
+        dust={0.03}
         scratches={0}
-        scanlines={0.025}
+        scanlines={0.02}
         flicker={0}
         zIndex={5}
       />
 
       <div className="main-content">
-        {/* HERO */}
+        {/* HERO — Swiss style + living 3D blob */}
         <section className="hero" id="details" aria-labelledby="hero-title">
-          <HeroBackground />
+          <HeroScene />
+
+          {/* Subtle grid lines */}
+          <div className="hero-grid" aria-hidden="true" />
+
           <div className="hero__topline">
             <span>ERIK GHABUZYAN / FRONTEND DEVELOPER</span>
             <span>34° 10' N / LOCAL NODE</span>
@@ -165,6 +169,13 @@ export default function App() {
             <i />
             <span>HUMAN / MACHINE / INTERFACE</span>
           </div>
+
+          {/* Micro technical text */}
+          <div className="hero__micro" aria-hidden="true">
+            <span>v2026.10.24</span>
+            <span>SHA · 0xB10</span>
+            <span>MONOCHROME / 60FPS</span>
+          </div>
         </section>
 
         <div className="ticker" aria-label="Areas of focus">
@@ -184,7 +195,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* PROJECTS — now using real 3D models */}
         <Projects />
 
         {/* ABOUT */}
