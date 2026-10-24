@@ -22,6 +22,7 @@ const projects: Project[] = [
       'A private music library built for streaming, playlists, listening history, uploads and offline-ready playback — on my own terms.',
     stack: ['React', 'JavaScript', 'Vite', 'Express', 'SQLite', 'PWA'],
     repository: 'https://github.com/b-1-o/selfmusic',
+    image: 'https://raw.githubusercontent.com/b-1-o/selfmusic/main/public/icon-512.png',
   },
   {
     number: '02',
@@ -51,6 +52,7 @@ const projects: Project[] = [
       'A grocery planning concept that connects budgets, preferences and product discovery without losing sight of the total.',
     stack: ['React', 'TypeScript', 'APIs', 'Vercel'],
     repository: 'https://github.com/b-1-o/shopline',
+    live: 'https://shopline-bice.vercel.app/',
   },
 ]
 
@@ -69,61 +71,43 @@ function ArrowIcon({ diagonal = true }: { diagonal?: boolean }) {
   )
 }
 
-function ProjectScreen({ name, index }: { name: string; index: number }) {
-  const patterns = [
-    // SelfMusic
-    <svg key="music" viewBox="0 0 400 240" className="h-full w-full" preserveAspectRatio="xMidYMid slice">
-      <rect width="400" height="240" fill="#0a0a0a" />
-      <g stroke="#262626" strokeWidth="1">
-        {Array.from({ length: 12 }, (_, i) => (
-          <line key={`h${i}`} x1="0" y1={20 + i * 20} x2="400" y2={20 + i * 20} />
-        ))}
-      </g>
-      <path d="M40 140 Q80 80 120 140 T200 140 T280 140 T360 140" fill="none" stroke="#a3a3a3" strokeWidth="1.5" />
-      <circle cx="200" cy="120" r="28" fill="none" stroke="#ffffff" strokeWidth="1.5" />
-      <text x="200" y="125" textAnchor="middle" fill="#ffffff" fontSize="10" fontFamily="monospace">
-        PLAY
-      </text>
-    </svg>,
-    // Collab Docs
-    <svg key="docs" viewBox="0 0 400 240" className="h-full w-full" preserveAspectRatio="xMidYMid slice">
-      <rect width="400" height="240" fill="#0a0a0a" />
-      <rect x="40" y="30" width="200" height="180" fill="#111" stroke="#262626" />
-      <rect x="50" y="45" width="80" height="6" fill="#a3a3a3" />
-      <rect x="50" y="65" width="160" height="3" fill="#404040" />
-      <rect x="50" y="78" width="140" height="3" fill="#333" />
-      <rect x="50" y="91" width="150" height="3" fill="#404040" />
-    </svg>,
-    // JoBrain
-    <svg key="jobs" viewBox="0 0 400 240" className="h-full w-full" preserveAspectRatio="xMidYMid slice">
-      <rect width="400" height="240" fill="#0a0a0a" />
-      {[0, 1, 2].map((row) =>
-        [0, 1].map((col) => (
-          <rect
-            key={`${row}-${col}`}
-            x={40 + col * 170}
-            y={30 + row * 70}
-            width="150"
-            height="55"
-            fill="#111"
-            stroke="#262626"
-          />
-        )),
-      )}
-    </svg>,
-    // Shopline
-    <svg key="shop" viewBox="0 0 400 240" className="h-full w-full" preserveAspectRatio="xMidYMid slice">
-      <rect width="400" height="240" fill="#0a0a0a" />
-      {[0, 1, 2, 3].map((i) => (
-        <g key={i}>
-          <rect x="40" y={35 + i * 48} width="320" height="36" fill="#111" stroke="#262626" />
-          <rect x="80" y={48 + i * 48} width={80 + i * 20} height="4" fill="#a3a3a3" />
-        </g>
-      ))}
-    </svg>,
-  ]
+function ProjectScreen({ project }: { project: Project }) {
+  if (project.image) {
+    return (
+      <div className="flex h-full w-full flex-col items-center justify-center gap-4 bg-[#050505] p-6 text-center">
+        <img
+          src={project.image}
+          alt={`${project.name} app icon`}
+          loading="lazy"
+          className="max-h-[42%] max-w-[56%] object-contain grayscale contrast-110"
+        />
+        <div className="font-mono text-[11px] tracking-[0.18em] text-white">{project.name}</div>
+        <div className="font-mono text-[8px] tracking-[0.14em] text-[#737373]">SELF-HOSTED / SOURCE</div>
+      </div>
+    )
+  }
 
-  return patterns[index % patterns.length]
+  if (project.live) {
+    return (
+      <iframe
+        title={`${project.name} live preview`}
+        src={project.live}
+        loading="lazy"
+        referrerPolicy="no-referrer"
+        sandbox="allow-scripts allow-same-origin"
+        className="block h-full w-full border-0 bg-[#050505]"
+        style={{ pointerEvents: 'none' }}
+      />
+    )
+  }
+
+  return (
+    <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-[#050505] p-5 text-center">
+      <span className="font-mono text-[9px] tracking-[0.18em] text-[#737373]">PREVIEW UNAVAILABLE</span>
+      <span className="text-sm text-white">{project.name}</span>
+      <span className="font-mono text-[8px] tracking-[0.12em] text-[#525252]">OPEN SOURCE / VIEW REPOSITORY</span>
+    </div>
+  )
 }
 
 export function Projects() {
@@ -203,11 +187,11 @@ export function Projects() {
                 <div className="flex items-center justify-center py-6">
                   {useLaptop ? (
                     <LaptopDevice>
-                      <ProjectScreen name={project.name} index={index} />
+                      <ProjectScreen project={project} />
                     </LaptopDevice>
                   ) : (
                     <PhoneDevice>
-                      <ProjectScreen name={project.name} index={index} />
+                      <ProjectScreen project={project} />
                     </PhoneDevice>
                   )}
                 </div>
