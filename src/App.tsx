@@ -198,7 +198,7 @@ export default function App() {
                 radius={18}
                 className="about-reflective"
               />
-            </div>      </div>
+            </div>
           </div>
         </section>
 
