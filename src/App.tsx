@@ -1,43 +1,16 @@
-import { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
+import { useEffect, useRef, useState } from 'react'
+import { gsap } from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import profilePortrait from '../assets/Gemini_Generated_Image_uf7b7uuf7b7uuf7b.jpeg'
 import { Cursor } from './components/Cursor'
-import { SmoothScroll } from './components/SmoothScroll'
-import GlitchText from './components/reactbits/GlitchText'
 import Noise from './components/reactbits/Noise'
 import { PlayerUI } from './ui/PlayerUI'
 import { Sidebar } from '../app/components/Sidebar'
 import { Projects } from '../app/components/sections/Projects'
-import { HeroScene } from '../app/components/3d/HeroScene'
 import TerminalRain from '../app/components/ui/TerminalRain'
 import ReflectiveCard from '../app/components/ui/ReflectiveCard'
+import { Hero } from './components/Hero'
 import './App.css'
-
-const technologies = [
-  { number: '01', name: 'React', note: 'Component systems' },
-  { number: '02', name: 'Remix / React Router', note: 'Routing and web fundamentals' },
-  { number: '03', name: 'Three.js', note: 'Real-time 3D on the web' },
-  { number: '04', name: 'Framer Motion', note: 'Motion with intention' },
-  { number: '05', name: 'TypeScript', note: 'Predictable interfaces' },
-  { number: '06', name: 'Tailwind CSS', note: 'Utility-first styling' },
-  { number: '07', name: 'Lenis', note: 'Smooth scroll behaviour' },
-  { number: '08', name: 'Vite', note: 'Fast frontend tooling' },
-]
-
-function ArrowIcon({ diagonal = true }: { diagonal?: boolean }) {
-  return (
-    <svg viewBox="0 0 20 20" aria-hidden="true">
-      <path
-        d={diagonal ? 'M5 15 15 5M6 5h9v9' : 'M3 10h13M10 4l6 6-6 6'}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
 
 function GitHubIcon() {
   return (
@@ -63,6 +36,7 @@ function LinkedInIcon() {
 
 export default function App() {
   const [isPlayerOpen, setIsPlayerOpen] = useState(false)
+  const aboutSectionRef = useRef<HTMLElement>(null)
   const [client, setClient] = useState(false)
 
   useEffect(() => {
@@ -86,13 +60,67 @@ export default function App() {
     }
   }, [isPlayerOpen])
 
+  useEffect(() => {
+    const about = aboutSectionRef.current
+    if (!about || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+    gsap.registerPlugin(ScrollTrigger)
+
+    const context = gsap.context(() => {
+      gsap.fromTo(
+        about,
+        { yPercent: 8, clipPath: 'inset(10% 0 0 round 26px)' },
+        {
+          yPercent: 0,
+          clipPath: 'inset(0% 0 0 round 0px)',
+          ease: 'none',
+          scrollTrigger: {
+            id: 'about-curtain',
+            trigger: about,
+            start: 'top bottom',
+            end: 'top 24%',
+            scrub: 0.8,
+            invalidateOnRefresh: true,
+          },
+        },
+      )
+
+      const reveals = gsap.utils.toArray<HTMLElement>(
+        '[data-about-reveal]',
+        about,
+      )
+      gsap.fromTo(
+        reveals,
+        { y: 58, autoAlpha: 0, clipPath: 'inset(0 0 18% 0)' },
+        {
+          y: 0,
+          autoAlpha: 1,
+          clipPath: 'inset(0 0 0% 0)',
+          ease: 'power3.out',
+          stagger: 0.14,
+          scrollTrigger: {
+            id: 'about-content-reveal',
+            trigger: about,
+            start: 'top 78%',
+            end: 'top 32%',
+            scrub: 0.8,
+            invalidateOnRefresh: true,
+          },
+        },
+      )
+    }, about)
+
+    return () => context.revert()
+  }, [])
+
   return (
     <main className="portfolio" id="top">
-      <SmoothScroll />
       <Sidebar onPlayerOpen={() => setIsPlayerOpen(true)} />
       <Cursor />
 
-      {client && <TerminalRain color="#2a2a2a" highlightColor="#6b6b6b" opacity={0.22} />}
+      {client && (
+        <TerminalRain color="#2a2a2a" highlightColor="#6b6b6b" opacity={0.28} />
+      )}
 
       <Noise
         fixed
@@ -109,81 +137,7 @@ export default function App() {
       />
 
       <div className="main-content">
-        {/* HERO — text left, Three.js liquid metal blob right */}
-        <section className="hero" id="details" aria-labelledby="hero-title">
-          {client && <HeroScene />}
-
-          <div className="hero-grid" aria-hidden="true" />
-
-          <div className="hero__topline">
-            <span>ERIK GHABUZYAN / FRONTEND DEVELOPER</span>
-            <span>34° 10' N / LOCAL NODE</span>
-          </div>
-
-          <motion.div
-            className="hero__content"
-            initial={{ opacity: 0, y: 28 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <p className="hero__kicker">
-              <span className="status-dot" /> INDEPENDENT DEVELOPER <i>///</i> INTERFACE ENGINEER
-            </p>
-            <GlitchText
-              className="hero__monogram"
-              trigger="hover"
-              mode="slices"
-              color="#f5f5f5"
-              shadowColors={['#a3a3a3', '#404040']}
-              intensity={0.18}
-              speed={0.42}
-              enableOnHover
-            >
-              B-1-O / 0xB10
-            </GlitchText>
-            <h1 id="hero-title" className="hero__title">
-              <span>Developer</span>
-              <b>+</b>
-              <em>Geek</em>
-            </h1>
-            <p className="hero__description">
-              I build thoughtful interfaces, personal software and little digital worlds. Frontend-first,
-              terminal-raised, always curious about what happens when design meets code.
-            </p>
-            <div className="hero__actions">
-              <a className="button button--white" href="#projects">
-                Explore selected work <ArrowIcon diagonal={false} />
-              </a>
-              <a
-                className="button button--text"
-                href="https://github.com/b-1-o"
-                target="_blank"
-                rel="noreferrer"
-              >
-                View GitHub <ArrowIcon />
-              </a>
-            </div>
-          </motion.div>
-
-          <div className="hero__index" aria-hidden="true">
-            <span>DESIGN / CODE / DETAIL</span>
-            <span>SCROLL TO EXPLORE ↓</span>
-          </div>
-          <span className="hero__vertical" aria-hidden="true">
-            開発者 + ギーク / B-1-O
-          </span>
-          <div className="hero__coordinates" aria-hidden="true">
-            <span>001</span>
-            <i />
-            <span>HUMAN / MACHINE / INTERFACE</span>
-          </div>
-
-          <div className="hero__micro" aria-hidden="true">
-            <span>v2026.10.24</span>
-            <span>SHA · 0xB10</span>
-            <span>MONOCHROME / 60FPS</span>
-          </div>
-        </section>
+        <Hero />
 
         <div className="ticker" aria-label="Areas of focus">
           <div className="ticker__track">
@@ -204,20 +158,72 @@ export default function App() {
 
         <Projects />
 
-        {/* ABOUT — floating ReflectiveCard */}
-        <section className="about-section section-wrap" id="about">
-          <div className="section-heading section-heading--about">
-            <div>
-              <p className="section-eyebrow">02 / PROFILE FILE</p>
-              <h2>
-                Hi there<span>.</span>
-              </h2>
-              <p className="about-subtitle">Curious by nature. Strange by design.</p>
-            </div>
+        {/* PROFILE PORTRAIT */}
+        {/* PROFILE */}
+        <section ref={aboutSectionRef} className="about-section section-wrap" id="about" aria-labelledby="about-title">
+          <div className="about-section__heading" data-about-reveal>
+            <p className="section-eyebrow">02 / PROFILE FILE</p>
+            <h2 className="about-section__title" id="about-title">
+              Hi there<span>.</span>
+            </h2>
+            <p className="about-section__tagline">Curious by nature. Strange by design.</p>
           </div>
 
-          <div className="about-layout about-layout--float">
-            <div className="about-copy">
+          <div className="about-layout">
+            <div className="about-portrait" data-about-reveal>
+              <div className="about-portrait__image-wrap">
+                {client ? (
+                  <ReflectiveCard
+                    theme="dark"
+                    tint="#ffffff"
+                    grayscale={1}
+                    metalness={1}
+                    roughness={0.2}
+                    blurStrength={0}
+                    shine={0.25}
+                    glare={0.12}
+                    warp={0.3}
+                    warpScale={3}
+                    bevel={0}
+                    enableTilt
+                    tiltStrength={7}
+                    intro
+                    width="100%"
+                    height="100%"
+                    radius={16}
+                    className="about-reflective"
+                  >
+                    <div className="about-reflective__inner">
+                      <img
+                        src={profilePortrait}
+                        alt="Monochrome profile artwork"
+                        className="about-reflective__image"
+                      />
+                      <div className="about-reflective__meta">
+                        <span>Erik Ghabuzyan</span>
+                        <span>Frontend Developer</span>
+                      </div>
+                    </div>
+                  </ReflectiveCard>
+                ) : (
+                  <div className="about-reflective about-reflective--fallback">
+                    <div className="about-reflective__inner">
+                      <img
+                        src={profilePortrait}
+                        alt="Monochrome profile artwork"
+                        className="about-reflective__image"
+                      />
+                      <div className="about-reflective__meta">
+                        <span>Erik Ghabuzyan</span>
+                        <span>Frontend Developer</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="about-copy" data-about-reveal>
               <span className="about-copy__kanji" aria-hidden="true">
                 プロフィール
               </span>
@@ -240,127 +246,6 @@ export default function App() {
                 <b>b-1-o</b>
                 <i>FRONTEND / UI ENGINEERING</i>
               </div>
-            </div>
-
-            <div className="about-card-wrap">
-              <div className="about-card-glow" aria-hidden="true" />
-              {client ? (
-                <ReflectiveCard
-                  name="Erik"
-                  role="FRONTEND / UI ENGINEERING"
-                  theme="dark"
-                  tint="#ffffff"
-                  metalness={1}
-                  roughness={0}
-                  grayscale={1}
-                  enableTilt
-                  tiltStrength={10}
-                  width={320}
-                  height={480}
-                  radius={18}
-                  className="about-reflective"
-                >
-                  <div className="about-reflective__inner">
-                    <img
-                      src={profilePortrait}
-                      alt="Monochrome profile artwork for Erik Ghabuzyan"
-                      className="about-reflective__image"
-                    />
-                    <div className="about-reflective__meta">
-                      <span>Erik</span>
-                      <span>FRONTEND / UI ENGINEERING</span>
-                    </div>
-                  </div>
-                </ReflectiveCard>
-              ) : (
-                <div className="about-portrait__placeholder" />
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* TECHNOLOGY */}
-        <section className="technology-section section-wrap" id="technology">
-          <div className="section-heading">
-            <div>
-              <p className="section-eyebrow">03 / TOOLCHAIN</p>
-              <h2>
-                Technology<span>.</span>
-              </h2>
-            </div>
-            <p>Tools I use to shape interfaces, motion and the things behind them.</p>
-          </div>
-
-          <div className="technology-list">
-            {technologies.map((technology) => (
-              <motion.div
-                className="technology-row"
-                key={technology.number}
-                initial={{ opacity: 0, x: -18 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.4 }}
-              >
-                <span className="technology-row__number">{technology.number}</span>
-                <h3>{technology.name}</h3>
-                <p>{technology.note}</p>
-                <span className="technology-row__mark">↗</span>
-              </motion.div>
-            ))}
-          </div>
-
-          <div className="technology-foot">
-            <span>DAILY STACK</span>
-            <div>
-              {['JavaScript', 'CSS', 'Git', 'Vercel', 'PostgreSQL', 'Three.js', 'Tailwind', 'Lenis'].map(
-                (skill) => (
-                  <span key={skill}>{skill}</span>
-                ),
-              )}
-            </div>
-          </div>
-
-          <div className="font-system">
-            <span>FONT SYSTEM</span>
-            <b>Montserrat</b>
-            <b>Inter</b>
-            <b>Noto Sans JP 900</b>
-          </div>
-        </section>
-
-        {/* CONTACT */}
-        <section className="contact-section section-wrap" id="contact">
-          <div className="contact-panel">
-            <div className="contact-panel__top">
-              <p className="section-eyebrow">04 / OPEN CHANNEL</p>
-              <span>↗</span>
-            </div>
-            <p className="contact-panel__kicker">AVAILABLE FOR INTERESTING FRONTEND WORK</p>
-            <h2>
-              Let's build
-              <br />
-              something <em>worth opening.</em>
-            </h2>
-            <p className="contact-panel__copy">
-              Have an interface to build, a tricky UI problem, or a frontend opportunity? Send a signal.
-            </p>
-            <div className="contact-actions">
-              <a
-                className="button button--white"
-                href="https://www.linkedin.com/in/b1o"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Connect on LinkedIn <ArrowIcon />
-              </a>
-              <a
-                className="button button--outline"
-                href="https://github.com/b-1-o"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Find me on GitHub <GitHubIcon />
-              </a>
             </div>
           </div>
         </section>
