@@ -26,7 +26,7 @@ export default function PhoneDevice({ children, className = '' }: PhoneDevicePro
 
         {/* Screen */}
         <div className="absolute inset-[10px] overflow-hidden rounded-[1.7rem] bg-[#050505]">
-          <div className="h-full w-full grayscale contrast-110 transition duration-500 group-hover:grayscale-0">
+          <div className="h-full w-full grayscale contrast-110">
             {children ?? (
               <div className="flex h-full items-center justify-center font-mono text-[10px] text-[#333]">
                 [ NO PREVIEW ]
