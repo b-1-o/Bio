@@ -48,9 +48,9 @@ const THEMES: Record<'dark' | 'light', Palette> = {
   },
   light: {
     surface: '#ffffff',
-    border: 'rgba(24, 24, 27, 0.1)',
-    shadow: '0 1px 2px rgba(24, 24, 27, 0.04), 0 18px 40px -20px rgba(24, 24, 27, 0.16)',
-    light: '#18181b',
+    border: 'rgba(24, 24, 24, 0.1)',
+    shadow: '0 1px 2px rgba(24, 24, 24, 0.04), 0 18px 40px -20px rgba(24, 24, 24, 0.16)',
+    light: '#181818',
     fill: 0.28,
     edge: 0.7
   }
