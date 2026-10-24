@@ -55,7 +55,7 @@ const projects: Project[] = [
   },
   {
     number: '04',
-    name: 'HEAVEN',
+    name: 'Heaven',
     category: 'Developer command center',
     description:
       'A single workspace for GitHub repositories, engineering activity, deployments, meetings, integrations and team collaboration — with a glass-and-fog inspired interface.',
