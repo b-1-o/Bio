@@ -713,3 +713,164 @@
   .projects-showcase__glow,.projects-showcase__stack>span,.projects-showcase__actions>a{transition:none!important}
   .projects-showcase__laptop.laptop-device{transform:none}
 }
+
+
+/* About — minimal copy and a floating ReflectiveCard */
+.about-section.section-wrap{
+  width:min(1320px,calc(100% - 120px));
+  margin-inline:auto;
+  padding-top:clamp(100px,11vw,154px);
+  padding-bottom:clamp(90px,10vw,140px);
+  border-top:1px solid #202020;
+}
+.about-section__heading{
+  margin-bottom:clamp(42px,6vw,76px);
+}
+.about-section__heading .section-eyebrow{
+  color:#777;
+  font-size:9px;
+  letter-spacing:.2em;
+}
+.about-section__title{
+  margin-top:17px;
+  font-size:clamp(58px,7.6vw,98px);
+  letter-spacing:-.09em;
+  line-height:.92;
+}
+.about-section__tagline{
+  margin-top:14px;
+  color:#a1a1a1;
+  font-size:clamp(13px,1.3vw,17px);
+  line-height:1.7;
+}
+.about-layout{
+  display:grid;
+  grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr);
+  align-items:center;
+  gap:clamp(45px,8vw,118px);
+}
+.about-copy{
+  grid-column:1;
+  grid-row:1;
+  max-width:690px;
+  padding:0;
+}
+.about-copy__kanji{
+  top:-38px;
+  right:3%;
+  color:#fff;
+  opacity:.035;
+  font-size:clamp(76px,10vw,132px);
+  letter-spacing:.04em;
+  pointer-events:none;
+}
+.about-copy>p:not(.about-signature){
+  max-width:680px;
+  margin:0;
+  color:#a2a2a2;
+  font-size:clamp(12px,1.05vw,14px);
+  line-height:2.05;
+  letter-spacing:-.008em;
+}
+.about-signature{
+  display:block;
+  margin-top:29px;
+  padding-top:17px;
+  border-top:1px solid #252525;
+  color:#d0d0d0;
+  font-family:var(--mono);
+  font-size:9px;
+  line-height:1.9;
+  letter-spacing:.07em;
+}
+.about-portrait{
+  position:relative;
+  isolation:isolate;
+  grid-column:2;
+  grid-row:1;
+  display:flex;
+  width:100%;
+  max-width:390px;
+  min-width:0;
+  align-items:center;
+  justify-content:center;
+  justify-self:end;
+  margin:0;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  overflow:visible;
+}
+.about-portrait__glow{
+  position:absolute;
+  z-index:-1;
+  inset:0;
+  display:block;
+  width:100%;
+  height:100%;
+  border-radius:9999px;
+  background:rgba(255,255,255,.1);
+  filter:blur(80px);
+  opacity:.8;
+  pointer-events:none;
+}
+.about-reflective{
+  position:relative!important;
+  display:block;
+  width:100%!important;
+  height:clamp(420px,42vw,500px)!important;
+  max-width:100%;
+  aspect-ratio:auto;
+  margin:0 auto;
+  border:0!important;
+  background:transparent!important;
+}
+.about-reflective .reflective-card__body{
+  overflow:hidden;
+  border-radius:var(--rc-radius);
+}
+.about-reflective .reflective-card__content{
+  padding:clamp(22px,3vw,34px);
+}
+.about-reflective .reflective-card__name{
+  font-size:clamp(28px,3.3vw,42px);
+  font-weight:500;
+  letter-spacing:-.055em;
+}
+.about-reflective .reflective-card__role{
+  margin-top:8px;
+  font-family:var(--mono);
+  font-size:9px;
+  letter-spacing:.12em;
+}
+.about-reflective .reflective-card__rim{
+  display:none!important;
+}
+@media(max-width:1050px){
+  .about-section.section-wrap{width:calc(100% - 76px)}
+  .about-layout{grid-template-columns:minmax(0,1.1fr) minmax(280px,.9fr);gap:34px}
+  .about-copy>p:not(.about-signature){font-size:12px;line-height:1.95}
+  .about-portrait{max-width:360px}
+  .about-reflective .reflective-card__content{padding:25px}
+}
+@media(max-width:760px){
+  .about-section.section-wrap{
+    width:calc(100% - 38px);
+    padding-top:84px;
+    padding-bottom:82px;
+  }
+  .about-section__heading{margin-bottom:38px}
+  .about-section__title{font-size:clamp(51px,12vw,72px)}
+  .about-layout{grid-template-columns:minmax(0,1fr);gap:35px}
+  .about-copy{grid-column:1;grid-row:1;max-width:none}
+  .about-copy__kanji{top:-23px;right:0;font-size:clamp(72px,17vw,100px)}
+  .about-copy>p:not(.about-signature){font-size:12px;line-height:1.95}
+  .about-signature{margin-top:24px;font-size:8px}
+  .about-portrait{grid-column:1;grid-row:2;justify-self:center;width:min(100%,390px);max-width:390px;margin-inline:auto}
+  .about-reflective{height:clamp(420px,130vw,480px)!important}
+  .about-reflective .reflective-card__content{padding:25px}
+}
+@media(prefers-reduced-motion:reduce){
+  .about-portrait__glow{filter:blur(48px)}
+}
