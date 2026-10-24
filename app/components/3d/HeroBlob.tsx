@@ -5,7 +5,8 @@ import * as THREE from 'three'
 
 export function HeroBlob() {
   const meshRef = useRef<THREE.Mesh>(null)
-  const materialRef = useRef<THREE.MeshPhysicalMaterial & { distort: number }>(null)
+  // MeshDistortMaterial from drei uses DistortMaterialImpl — keep ref loosely typed
+  const materialRef = useRef<{ distort: number } | null>(null)
 
   useFrame((state) => {
     if (meshRef.current) {
@@ -34,7 +35,7 @@ export function HeroBlob() {
       <directionalLight position={[-5, -5, -5]} intensity={1} color="#a3a3a3" />
       <Sphere ref={meshRef} args={[1, 128, 128]} scale={3.5}>
         <MeshDistortMaterial
-          ref={materialRef}
+          ref={materialRef as React.Ref<any>}
           color="#111111"
           envMapIntensity={1.5}
           clearcoat={1}
