@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Links, Meta, Outlet, Scripts, ScrollRestoration } from '@remix-run/react'
+import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
 import '../src/index.css'
 
 export const meta = () => [
