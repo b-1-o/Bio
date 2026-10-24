@@ -101,7 +101,7 @@
 .about-terminal>strong{color:#fff;font-size:clamp(42px,6vw,70px);letter-spacing:-.09em}
 .about-terminal>span{display:block;width:100%;padding-bottom:9px;border-bottom:1px solid #262626}
 .about-copy{position:relative;max-width:690px}
-.about-copy__kanji{position:absolute;z-index:0;top:-28px;right:0;color:#111;font-family:var(--jp);font-size:clamp(80px,12vw,170px);font-weight:900;letter-spacing:.05em;writing-mode:vertical-rl;pointer-events:none}
+.about-copy__kanji{position:absolute;z-index:0;top:-28px;right:0;color:#f5f5f5;opacity:.055;font-family:var(--jp);font-size:clamp(80px,12vw,170px);font-weight:900;letter-spacing:.05em;writing-mode:vertical-rl;pointer-events:none}
 .about-copy>p{position:relative;z-index:1;max-width:630px;margin:0 0 19px;color:#a3a3a3;font-size:12px;line-height:2.05}
 .about-copy>.about-copy__lead{max-width:590px;margin-bottom:25px;color:#f5f5f5;font-size:clamp(17px,1.8vw,23px);line-height:1.7;letter-spacing:-.03em}
 .about-signature{position:relative;z-index:1;display:flex;align-items:center;flex-wrap:wrap;gap:14px;margin-top:32px;padding-top:17px;border-top:1px solid #262626;color:#d4d4d4;font-size:11px}
