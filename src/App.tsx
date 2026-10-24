@@ -196,36 +196,104 @@ export default function App() {
         <Projects />
 
         {/* PROFILE PORTRAIT */}
-        <section className="about-section section-wrap" id="about" aria-label="Profile portrait">
-          <div className="about-card-wrap">
-            {client ? (
-              <ReflectiveCard
-                theme="dark"
-                tint="#ffffff"
-                grayscale={1}
-                metalness={1}
-                roughness={0.2}
-                blurStrength={0}
-                shine={0.25}
-                glare={0.12}
-                warp={0.3}
-                warpScale={3}
-                bevel={0}
-                enableTilt={true}
-                tiltStrength={7}
-                intro={true}
-                width="100%"
-                height="clamp(360px, 44vw, 560px)"
-                radius={18}
-                className="about-reflective"
-              >
-                <img src={profilePortrait} alt="Monochrome profile artwork" className="about-reflective__image" />
-              </ReflectiveCard>
-            ) : (
-              <div className="about-reflective about-reflective--fallback">
-                <img src={profilePortrait} alt="Monochrome profile artwork" className="about-reflective__image" />
+        {/* PROFILE */}
+        <section className="about-section section-wrap" id="about" aria-labelledby="about-title">
+          <div className="about-section__heading">
+            <p className="section-eyebrow">02 / PROFILE FILE</p>
+            <h2 className="about-section__title" id="about-title">
+              Hi there<span>.</span>
+            </h2>
+            <p className="about-section__tagline">Curious by nature. Strange by design.</p>
+          </div>
+
+          <div className="about-layout">
+            <div className="about-portrait">
+              <div className="about-portrait__top">
+                <span>SUBJECT / 0xB10</span>
+                <span>PROFILE 001</span>
               </div>
-            )}
+
+              <div className="about-portrait__image-wrap">
+                {client ? (
+                  <ReflectiveCard
+                    theme="dark"
+                    tint="#ffffff"
+                    grayscale={1}
+                    metalness={1}
+                    roughness={0.2}
+                    blurStrength={0}
+                    shine={0.25}
+                    glare={0.12}
+                    warp={0.3}
+                    warpScale={3}
+                    bevel={0}
+                    enableTilt
+                    tiltStrength={7}
+                    intro
+                    width="100%"
+                    height="100%"
+                    radius={16}
+                    className="about-reflective"
+                  >
+                    <div className="about-reflective__inner">
+                      <img
+                        src={profilePortrait}
+                        alt="Monochrome profile artwork"
+                        className="about-reflective__image"
+                      />
+                      <div className="about-reflective__meta">
+                        <span>Erik Ghabuzyan</span>
+                        <span>Frontend Developer</span>
+                      </div>
+                    </div>
+                  </ReflectiveCard>
+                ) : (
+                  <div className="about-reflective about-reflective--fallback">
+                    <div className="about-reflective__inner">
+                      <img
+                        src={profilePortrait}
+                        alt="Monochrome profile artwork"
+                        className="about-reflective__image"
+                      />
+                      <div className="about-reflective__meta">
+                        <span>Erik Ghabuzyan</span>
+                        <span>Frontend Developer</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="about-portrait__bottom">
+                <span>夜間プログラマー</span>
+                <span>GRAYSCALE / REFLECTIVE</span>
+              </div>
+            </div>
+
+            <div className="about-copy">
+              <span className="about-copy__kanji" aria-hidden="true">
+                プロフィール
+              </span>
+              <p className="about-copy__lead">
+                I'm Erik — a frontend-focused developer who cares about how a product feels as much as how it
+                looks.
+              </p>
+              <p>
+                I work primarily with React, TypeScript, and modern web tooling to make responsive, interactive
+                interfaces. I enjoy the details: motion that has a purpose, accessible interactions, performance
+                that stays out of the way, and layouts that feel deliberate on every screen.
+              </p>
+              <p>
+                Outside the browser, I'm drawn to Linux, late-night coding, underground music, Japanese horror
+                stories and tools that make everyday life a little better. Most of the projects here began as
+                something I wanted to exist — so I made them.
+              </p>
+              <div className="about-signature">
+                <span>— Erik</span>
+                <b>b-1-o</b>
+                <i>FRONTEND / UI ENGINEERING</i>
+              </div>
+            </div>
           </div>
         </section>
 
