@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import profilePortrait from '../assets/Gemini_Generated_Image_uf7b7uuf7b7uuf7b.jpeg'
 import { Cursor } from './components/Cursor'
 import Noise from './components/reactbits/Noise'
 import { PlayerUI } from './ui/PlayerUI'
@@ -197,8 +198,20 @@ export default function App() {
                 height="clamp(420px, 42vw, 500px)"
                 radius={18}
                 className="about-reflective"
-              />
-            </div>
+              >
+                <div className="about-reflective__inner">
+                  <img
+                    src={profilePortrait}
+                    alt="Monochrome portrait artwork"
+                    className="about-reflective__image"
+                  />
+                  <div className="about-reflective__meta">
+                    <span>Erik</span>
+                    <span>FRONTEND / UI ENGINEERING</span>
+                  </div>
+                </div>
+              </ReflectiveCard>
+            </div>      </div>
           </div>
         </section>
 
