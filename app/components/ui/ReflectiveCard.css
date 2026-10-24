@@ -27,6 +27,23 @@
   will-change: transform;
 }
 
+.reflective-card__metal {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.reflective-card__grain {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  mix-blend-mode: overlay;
+}
+
 .reflective-card__canvas {
   position: absolute;
   inset: 0;
@@ -43,6 +60,11 @@
   height: 100%;
   flex-direction: column;
   padding: var(--rc-pad);
+}
+
+.reflective-card__content img,
+.reflective-card__content > * {
+  max-width: 100%;
 }
 
 .reflective-card__header {
@@ -143,6 +165,9 @@
   background: var(--rc-tile);
   box-shadow: var(--rc-tile-shadow);
   color: var(--rc-muted);
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
 }
 
 .reflective-card__tile::after {
