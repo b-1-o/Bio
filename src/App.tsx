@@ -5,11 +5,12 @@ import { Cursor } from './components/Cursor'
 import { SmoothScroll } from './components/SmoothScroll'
 import GlitchText from './components/reactbits/GlitchText'
 import Noise from './components/reactbits/Noise'
-import PixelTransition from './components/reactbits/PixelTransition'
 import { PlayerUI } from './ui/PlayerUI'
 import { Sidebar } from '../app/components/Sidebar'
 import { Projects } from '../app/components/sections/Projects'
-import { HeroScene } from '../app/components/3d/HeroScene'
+import TerminalRain from '../app/components/ui/TerminalRain'
+import GradientWaves from '../app/components/ui/GradientWaves'
+import ReflectiveCard from '../app/components/ui/ReflectiveCard'
 import './App.css'
 
 const technologies = [
@@ -62,6 +63,11 @@ function LinkedInIcon() {
 
 export default function App() {
   const [isPlayerOpen, setIsPlayerOpen] = useState(false)
+  const [client, setClient] = useState(false)
+
+  useEffect(() => {
+    setClient(true)
+  }, [])
 
   useEffect(() => {
     if (!isPlayerOpen) return
@@ -85,6 +91,11 @@ export default function App() {
       <SmoothScroll />
       <Sidebar onPlayerOpen={() => setIsPlayerOpen(true)} />
       <Cursor />
+
+      {client && (
+        <TerminalRain color="#2a2a2a" highlightColor="#6b6b6b" opacity={0.28} />
+      )}
+
       <Noise
         fixed
         opacity={0.03}
@@ -100,11 +111,23 @@ export default function App() {
       />
 
       <div className="main-content">
-        {/* HERO — Swiss style + living 3D blob */}
+        {/* HERO — Swiss + GradientWaves sphere */}
         <section className="hero" id="details" aria-labelledby="hero-title">
-          <HeroScene />
+          {/* GradientWaves as large sphere in the right area */}
+          {client && (
+            <div className="hero-wave-sphere" aria-hidden="true">
+              <GradientWaves
+                horizonColor="#000000"
+                waveColor="#444444"
+                crestColor="#ffffff"
+                backgroundColor="transparent"
+                lightMode={false}
+                speed={1.5}
+                amplitude={3}
+              />
+            </div>
+          )}
 
-          {/* Subtle grid lines */}
           <div className="hero-grid" aria-hidden="true" />
 
           <div className="hero__topline">
@@ -170,7 +193,6 @@ export default function App() {
             <span>HUMAN / MACHINE / INTERFACE</span>
           </div>
 
-          {/* Micro technical text */}
           <div className="hero__micro" aria-hidden="true">
             <span>v2026.10.24</span>
             <span>SHA · 0xB10</span>
@@ -197,7 +219,7 @@ export default function App() {
 
         <Projects />
 
-        {/* ABOUT */}
+        {/* ABOUT + ReflectiveCard */}
         <section className="about-section section-wrap" id="about">
           <div className="section-heading section-heading--about">
             <div>
@@ -215,40 +237,40 @@ export default function App() {
                 <span>SUBJECT / 0xB10</span>
                 <span>PROFILE 001</span>
               </div>
-              <PixelTransition
-                firstContent={
-                  <img
-                    className="about-portrait__image"
-                    src={profilePortrait}
-                    alt="Monochrome profile artwork for Erik Ghabuzyan"
-                  />
-                }
-                secondContent={
-                  <div className="about-terminal">
-                    <span>IDENTITY VERIFIED</span>
-                    <strong>0xB10</strong>
-                    <span>ROLE / FRONTEND</span>
-                    <span>SYSTEM / LINUX</span>
-                    <span>STATUS / BUILDING</span>
+
+              {client ? (
+                <ReflectiveCard
+                  theme="dark"
+                  tint="#ffffff"
+                  grayscale={1}
+                  metalness={1}
+                  roughness={0.2}
+                  enableTilt
+                  tiltStrength={10}
+                  width="100%"
+                  height={420}
+                  radius={16}
+                  className="about-reflective"
+                >
+                  <div className="about-reflective__inner">
+                    <img
+                      src={profilePortrait}
+                      alt="Monochrome profile artwork for Erik Ghabuzyan"
+                      className="about-reflective__image"
+                    />
+                    <div className="about-reflective__meta">
+                      <span>Erik Ghabuzyan</span>
+                      <span>Frontend Developer</span>
+                    </div>
                   </div>
-                }
-                gridSize={13}
-                pixelColor="#ffffff"
-                animationStepDuration={0.38}
-                pattern="dither"
-                randomness={0.12}
-                pixelAnimation="fade"
-                pixelShape="square"
-                gap={2}
-                fps={36}
-                trigger="hover"
-                once={false}
-                aspectRatio="3 / 4"
-                className="about-portrait__transition"
-              />
+                </ReflectiveCard>
+              ) : (
+                <div className="about-portrait__placeholder" />
+              )}
+
               <div className="about-portrait__bottom">
                 <span>夜間プログラマー</span>
-                <span>GRAYSCALE / ORIGINAL IMAGE</span>
+                <span>GRAYSCALE / REFLECTIVE</span>
               </div>
             </div>
 
