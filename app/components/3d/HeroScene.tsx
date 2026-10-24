@@ -4,7 +4,19 @@ import { HeroBlob } from './HeroBlob'
 
 export function HeroScene() {
   return (
-    <div className="absolute top-0 right-0 w-full md:w-[58%] h-full z-0 pointer-events-none">
+    <div
+      className="hero-3d-scene"
+      aria-hidden="true"
+      style={{
+        position: 'absolute',
+        top: 0,
+        right: 0,
+        width: '50%',
+        height: '100%',
+        zIndex: 0,
+        pointerEvents: 'none',
+      }}
+    >
       <Canvas
         dpr={[1, 1.5]}
         camera={{ position: [0, 0, 6.5], fov: 42 }}
