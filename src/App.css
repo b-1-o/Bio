@@ -176,3 +176,27 @@
 @media(max-width:760px){.projects-section .section-heading{margin-bottom:30px}.projects-title{font-size:clamp(43px,10vw,61px)!important}}
 
 .section-heading h2.projects-title em{color:#a3a3a3;font-family:Georgia,"Times New Roman",serif;font-style:italic;font-weight:400;letter-spacing:-.075em}
+
+
+/* Clean portrait: image-first, no outer frame or metadata rails. */
+.about-portrait{position:relative;width:100%;max-width:400px;padding:0;border:0;background:transparent;box-shadow:none}
+.about-portrait__image-wrap{position:relative;width:100%;aspect-ratio:842 / 1264;overflow:hidden;border:0;background:transparent}
+.about-reflective{position:absolute!important;inset:0;width:100%!important;height:100%!important;max-width:100%;aspect-ratio:842 / 1264}
+.about-reflective .reflective-card__content{padding:0}
+.about-reflective .reflective-card__canvas{z-index:2;opacity:.2;mix-blend-mode:screen;pointer-events:none}
+.about-reflective .reflective-card__rim{display:none!important}
+.about-reflective__inner{position:absolute;inset:0;overflow:hidden;border-radius:16px;background:#080808}
+.about-reflective__image{display:block;width:100%;height:100%;object-fit:contain;object-position:center;filter:grayscale(100%) contrast(1.08);user-select:none;-webkit-user-drag:none}
+.about-reflective__meta{position:absolute;inset:auto 0 0;display:flex;flex-direction:column;gap:4px;padding:42px 16px 15px;background:linear-gradient(transparent,#050505dc);color:#f5f5f5}
+.about-reflective__meta span:first-child{font-size:12px;font-weight:600;letter-spacing:.02em}
+.about-reflective__meta span:last-child{color:#a3a3a3;font-family:var(--mono);font-size:7px;letter-spacing:.14em}
+.about-reflective--fallback{position:absolute;inset:0;overflow:hidden;border-radius:16px;background:#080808}
+
+/* Hero typography is split into independently animated characters. */
+.hero__word{display:inline-flex;white-space:nowrap}
+.hero__word--italic{color:#a3a3a3;font-weight:500}
+.hero__char{display:inline-block;transform-origin:50% 100%;backface-visibility:hidden;will-change:transform,opacity}
+.hero__plus{display:inline-block;transform-origin:50% 100%}
+.hero-wave-sphere{will-change:transform,opacity;transform-origin:center center}
+@media(max-width:760px){.about-portrait{width:min(100%,370px);justify-self:center}.about-portrait__image-wrap{width:100%}}
+@media(prefers-reduced-motion:reduce){.hero__char{will-change:auto}.hero-wave-sphere{will-change:auto}}
