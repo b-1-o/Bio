@@ -211,7 +211,7 @@ export default function App() {
                   </div>
                 </div>
               </ReflectiveCard>
-            </div>      </div>
+            </div>
           </div>
         </section>
 
