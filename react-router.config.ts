@@ -5,4 +5,7 @@ export default {
   basename: '/Bio',
   buildDirectory: 'build',
   ssr: false,
+  future: {
+    v8_viteEnvironmentApi: true,
+  },
 } satisfies Config
