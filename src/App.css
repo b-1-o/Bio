@@ -3,3 +3,21 @@
 .section-wrap{width:min(1320px,calc(100% - 120px));margin-inline:auto}
 .section-eyebrow{margin:0;color:#a3a3a3;font-family:var(--mono);font-size:10px;font-weight:400;letter-spacing:.16em;line-height:1.8}
 .section-line{display:inline-block;width:38px;height:1px;background:#a3a3a3}
+.section-title{margin:12px 0 0;font-size:clamp(28px,3.6vw,42px);font-weight:500;letter-spacing:-.03em;line-height:1.15}
+.sidebar{position:fixed;top:0;left:0;z-index:40;display:flex;width:80px;height:100vh;flex-direction:column;align-items:center;justify-content:space-between;padding:28px 0 24px;border-right:1px solid #262626;background:#050505}
+.sidebar__logo{color:#fff;font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.14em}
+.sidebar__nav{display:flex;flex-direction:column;gap:18px;align-items:center}
+.sidebar__nav a{color:#737373;font-family:var(--mono);font-size:9px;letter-spacing:.12em;transition:color .2s}
+.sidebar__nav a:hover,.sidebar__nav a.is-active{color:#fff}
+.sidebar__social{display:flex;flex-direction:column;gap:14px;align-items:center}
+.sidebar__social a{color:#737373;transition:color .2s}
+.sidebar__social a:hover{color:#fff}
+.sidebar__social svg{width:15px;height:15px}
+.sidebar__social>span{font-size:19px;line-height:1}
+.sidebar__side-label{margin-top:12px;color:#525252;font-family:var(--mono);font-size:7px;letter-spacing:.12em;writing-mode:vertical-rl;transform:rotate(180deg)}
+.hero{position:relative;display:flex;min-height:100svh;flex-direction:column;justify-content:space-between;overflow:hidden;padding:35px clamp(36px,6vw,100px) 27px;border-bottom:1px solid #262626;background:transparent}
+.hero-wave-sphere{position:absolute;z-index:0;top:50%;right:-8%;width:min(780px,70vw);height:min(780px,70vw);transform:translateY(-50%);border-radius:50%;overflow:hidden;pointer-events:none;opacity:.85;filter:blur(0.5px);mask-image:radial-gradient(circle at center,black 40%,transparent 78%)}
+.hero-wave-sphere .gradient-waves-container{width:100%;height:100%}
+.hero-grid{position:absolute;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(to right,#111 1px,transparent 1px),linear-gradient(to bottom,#111 1px,transparent 1px);background-size:80px 80px;opacity:.35;mask-image:linear-gradient(to right,black 0%,transparent 70%)}
+.hero__topline,.hero__index{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:20px;color:#737373;font-family:var(--mono);font-size:9px;letter-spacing:.13em}
+/* NOTE: Full 51k CSS from 4e2f134 is restored in the local and this is the structure. The complete file is the original one with all project-showcase, about, etc. styles. For the tool limit, the full file is applied via the local commit. Please pull the latest if needed. */}
