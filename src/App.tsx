@@ -8,7 +8,6 @@ import { PlayerUI } from './ui/PlayerUI'
 import { Sidebar } from '../app/components/Sidebar'
 import { Projects } from '../app/components/sections/Projects'
 import TerminalRain from '../app/components/ui/TerminalRain'
-import ReflectiveCard from '../app/components/ui/ReflectiveCard'
 import { Hero } from './components/Hero'
 import './App.css'
 
@@ -108,6 +107,55 @@ export default function App() {
           },
         },
       )
+      const portrait = about.querySelector<HTMLElement>('.about-portrait')
+      const portraitImage = about.querySelector<HTMLElement>('[data-portrait-image]')
+      const portraitMarks = gsap.utils.toArray<HTMLElement>('[data-portrait-kanji]', about)
+
+      if (portrait && portraitImage) {
+        gsap.fromTo(
+          portraitImage,
+          {
+            autoAlpha: 0,
+            y: 34,
+            scale: 1.055,
+            clipPath: 'inset(12% 0 0 0)',
+            filter: 'grayscale(1) brightness(.42) blur(7px)',
+          },
+          {
+            autoAlpha: 0.94,
+            y: 0,
+            scale: 1,
+            clipPath: 'inset(0% 0 0 0)',
+            filter: 'grayscale(1) contrast(1.12) brightness(.84) blur(0px)',
+            duration: 1.2,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: portrait,
+              start: 'top 78%',
+              once: true,
+            },
+          },
+        )
+
+        gsap.fromTo(
+          portraitMarks,
+          { y: 24, opacity: 0, filter: 'blur(7px)' },
+          {
+            y: 0,
+            opacity: 0.2,
+            filter: 'blur(0px)',
+            duration: 1,
+            ease: 'power3.out',
+            stagger: 0.16,
+            scrollTrigger: {
+              trigger: portrait,
+              start: 'top 74%',
+              once: true,
+            },
+          },
+        )
+      }
+
     }, about)
 
     return () => context.revert()
@@ -139,23 +187,6 @@ export default function App() {
       <div className="main-content">
         <Hero />
 
-        <div className="ticker" aria-label="Areas of focus">
-          <div className="ticker__track">
-            {Array.from({ length: 2 }, (_, index) => (
-              <span className="ticker__group" key={index}>
-                <b>FRONTEND ENGINEERING</b>
-                <i>✳</i>
-                <b>PERSONAL SOFTWARE</b>
-                <i>✳</i>
-                <b>MONOCHROME WORLDS</b>
-                <i>✳</i>
-                <b>DETAILS MATTER</b>
-                <i>✳</i>
-              </span>
-            ))}
-          </div>
-        </div>
-
         <Projects />
 
         <section ref={aboutSectionRef} className="about-section section-wrap" id="about" aria-labelledby="about-title">
@@ -172,45 +203,21 @@ export default function App() {
               <div className="about-signature">— Erik, b-1-o, FRONTEND / UI ENGINEERING</div>
             </div>
 
-            <div className="about-portrait" data-about-reveal>
-              <span className="about-portrait__glow" aria-hidden="true" />
-              <ReflectiveCard
-                name="Erik"
-                role="FRONTEND / UI ENGINEERING"
-                badge=""
-                status=""
-                idLabel=""
-                idValue=""
-                theme="dark"
-                tint="#ffffff"
-                metalness={1}
-                roughness={0}
-                blurStrength={0}
-                shine={0.15}
-                glare={0}
-                warp={0.3}
-                warpScale={3}
-                bevel={0}
-                enableTilt
-                tiltStrength={7}
-                intro
-                width="min(100%, 390px)"
-                height="clamp(420px, 42vw, 500px)"
-                radius={18}
-                className="about-reflective"
-              >
-                <div className="about-reflective__inner">
-                  <img
-                    src={profilePortrait}
-                    alt="Monochrome portrait artwork"
-                    className="about-reflective__image"
-                  />
-                  <div className="about-reflective__meta">
-                    <span>Erik</span>
-                    <span>FRONTEND / UI ENGINEERING</span>
-                  </div>
+            <div className="about-portrait" aria-label="Portrait artwork with Japanese typography">
+              <div className="about-portrait__art">
+                <img
+                  src={profilePortrait}
+                  alt="Monochrome portrait artwork"
+                  className="about-portrait__image"
+                  data-portrait-image
+                />
+                <div className="about-portrait__japanese" aria-hidden="true">
+                  <span data-portrait-kanji>異界</span>
+                  <span data-portrait-kanji>静寂</span>
+                  <span data-portrait-kanji>創造</span>
                 </div>
-              </ReflectiveCard>
+                <span className="about-portrait__index" data-portrait-kanji aria-hidden="true">肖像 / 01</span>
+              </div>
             </div>
           </div>
         </section>
