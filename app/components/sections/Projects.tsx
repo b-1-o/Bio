@@ -1,6 +1,5 @@
 import { motion, useReducedMotion } from 'framer-motion'
-import PhoneDevice from '../ui/PhoneDevice'
-import LaptopDevice from '../ui/LaptopDevice'
+import { ProjectDevice3D } from '../ui/ProjectDevice3D'
 
 type ProjectPreviewKind = 'music' | 'docs' | 'jobbrain' | 'heaven'
 type ProjectDeviceKind = 'phone' | 'laptop'
@@ -294,11 +293,7 @@ function ProjectDevice({ project }: { project: Project }) {
       </div>
       <div className="projects-showcase__glow" aria-hidden="true" />
       <div className="projects-showcase__device-float">
-        {project.device === 'phone' ? (
-          <PhoneDevice className="projects-showcase__phone">{preview}</PhoneDevice>
-        ) : (
-          <LaptopDevice className="projects-showcase__laptop">{preview}</LaptopDevice>
-        )}
+        <ProjectDevice3D device={project.device}>{preview}</ProjectDevice3D>
       </div>
     </div>
   )
