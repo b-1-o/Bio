@@ -1757,3 +1757,39 @@
 @media(prefers-reduced-motion:reduce){
   .hero--3d .hero__visual{-webkit-mask-image:none;mask-image:none}
 }
+
+
+/* Editorial portrait lift: a soft white card-like halo behind the artwork. */
+.about-portrait__art{
+  isolation:isolate;
+}
+.about-portrait__art::before{
+  content:"";
+  position:absolute;
+  z-index:0;
+  inset:3.5% -3.5% 2.5%;
+  border-radius:3px;
+  background:linear-gradient(145deg,#ffffff16 0%,#ffffff08 35%,#ffffff02 70%,#ffffff12 100%);
+  box-shadow:
+    0 0 0 1px #ffffff20,
+    0 0 22px 2px #ffffff15,
+    0 0 58px 7px #ffffff0d,
+    0 24px 70px #ffffff0a,
+    inset 0 1px 0 #ffffff24;
+  transform:translate3d(0,0,0) rotate(1.25deg);
+  pointer-events:none;
+}
+.about-portrait__art::after{
+  content:"";
+  position:absolute;
+  z-index:0;
+  inset:-1.5% -1.5% 1%;
+  border:1px solid #ffffff0a;
+  background:radial-gradient(ellipse at 50% 40%,#ffffff0c 0%,#ffffff04 45%,transparent 74%);
+  filter:blur(13px);
+  pointer-events:none;
+}
+.about-portrait__image{z-index:1;filter:grayscale(100%) contrast(1.12) brightness(.84) drop-shadow(0 0 15px #ffffff16)}
+@media(max-width:760px){
+  .about-portrait__art::before{inset:3% -2.5% 2%;box-shadow:0 0 0 1px #ffffff1c,0 0 20px 1px #ffffff12,0 0 42px 6px #ffffff0a,0 18px 45px #ffffff08,inset 0 1px 0 #ffffff20}
+}
