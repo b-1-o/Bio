@@ -1606,3 +1606,108 @@
   .projects-showcase__phone .phone-device__body,
   .projects-showcase__laptop .laptop-device__lid{transition:none!important}
 }
+
+
+/* True 3D device canvases — reference-like wide laptop and tall handset ratios. */
+.projects-showcase__device-float{animation:none!important}
+.project-device-3d{
+  position:relative;
+  display:grid;
+  flex:none;
+  place-items:center;
+  margin-inline:auto;
+  overflow:visible;
+  isolation:isolate;
+}
+.project-device-3d--laptop{
+  width:min(180%,792px);
+  aspect-ratio:12 / 10;
+  min-width:0;
+}
+.project-device-3d--phone{
+  width:min(108%,475px);
+  aspect-ratio:7 / 10;
+  top:5%;
+  left:0;
+}
+.project-device-3d>canvas,
+.project-device-3d canvas{
+  position:absolute!important;
+  inset:0!important;
+  display:block;
+  width:100%!important;
+  height:100%!important;
+  background:transparent!important;
+  outline:none;
+  touch-action:pan-y;
+}
+.project-device-3d__fallback{
+  position:absolute;
+  inset:0;
+  display:grid;
+  min-width:0;
+  place-items:center;
+}
+.project-device-3d__fallback>.phone-device{
+  width:min(100%,254px)!important;
+  max-width:254px;
+}
+.project-device-3d__fallback>.laptop-device{
+  width:100%!important;
+  max-width:650px!important;
+}
+.project-device-html{
+  display:block;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  color:#e6e6e6;
+  background:#080808;
+  isolation:isolate;
+}
+.project-device-html--phone{
+  border-radius:inherit;
+}
+.project-device-html--laptop{
+  border:1px solid #282828;
+}
+.project-device-html>.project-screen{
+  display:flex;
+  width:100%!important;
+  height:100%!important;
+  min-width:0;
+  min-height:0;
+  overflow:hidden;
+}
+.project-device-html--phone>.project-screen--music{border-radius:inherit}
+.project-device-html--laptop>.project-screen--docs,
+.project-device-html--laptop>.project-screen--jobbrain,
+.project-device-html--laptop>.project-screen--heaven{border-radius:4px}
+.project-device-3d__fallback .project-screen{filter:grayscale(1) contrast(1.08)}
+.projects-showcase__device{overflow:visible!important}
+.projects-showcase__device--laptop .project-device-3d--laptop{transform:translateX(-2%)}
+.projects-showcase__device--phone .project-device-3d--phone{transform:translateX(-5%)}
+@media(max-width:1100px){
+  .project-device-3d--laptop{width:min(185%,690px)}
+  .project-device-3d--phone{width:min(108%,410px)}
+}
+@media(max-width:760px){
+  .project-device-3d--phone{
+    width:min(108%,475px);
+    left:0;
+    top:0;
+  }
+  .project-device-3d--laptop{
+    width:108%;
+    max-width:650px;
+  }
+  .projects-showcase__device--laptop .project-device-3d--laptop,
+  .projects-showcase__device--phone .project-device-3d--phone{transform:none}
+  .project-device-html--laptop{border-radius:4px}
+}
+@media(max-width:420px){
+  .project-device-3d--laptop{width:112%}
+}
+@media(prefers-reduced-motion:reduce){
+  .projects-showcase__device-float{animation:none!important}
+}
