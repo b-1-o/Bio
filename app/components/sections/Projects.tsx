@@ -15,6 +15,7 @@ type Project = {
   live?: string
   preview: ProjectPreviewKind
   device: ProjectDeviceKind
+  japanese: [string, string]
 }
 
 const projects: Project[] = [
@@ -28,6 +29,7 @@ const projects: Project[] = [
     repository: 'https://github.com/b-1-o/selfmusic',
     preview: 'music',
     device: 'phone',
+    japanese: ['音楽', '静寂'],
   },
   {
     number: '02',
@@ -40,6 +42,9 @@ const projects: Project[] = [
     live: 'https://collab-docs-4tb.pages.dev/',
     preview: 'docs',
     device: 'laptop',
+    japanese: ['天界', '創造'],
+    japanese: ['未来', '仕事'],
+    japanese: ['共同', '記録'],
   },
   {
     number: '03',
@@ -279,6 +284,10 @@ function ProjectDevice({ project }: { project: Project }) {
   const preview = <ProjectPreview kind={project.preview} />
   return (
     <div className={'projects-showcase__device projects-showcase__device--' + project.device}>
+      <div className="projects-showcase__kanji" aria-hidden="true">
+        <span>{project.japanese[0]}</span>
+        <span>{project.japanese[1]}</span>
+      </div>
       <div className="projects-showcase__glow" aria-hidden="true" />
       <div className="projects-showcase__device-float">
         {project.device === 'phone' ? (
@@ -287,7 +296,6 @@ function ProjectDevice({ project }: { project: Project }) {
           <LaptopDevice className="projects-showcase__laptop">{preview}</LaptopDevice>
         )}
       </div>
-      <div className="projects-showcase__device-caption"><span />INTERFACE / {project.number}</div>
     </div>
   )
 }
@@ -338,7 +346,6 @@ export function Projects() {
       </div>
 
       <footer className="projects-showcase__footer">
-        <span>SELECTED WORK / 2024 — 2026</span>
         <a href="https://github.com/b-1-o?tab=repositories" target="_blank" rel="noreferrer">Explore all repositories <ArrowIcon /></a>
       </footer>
     </section>
