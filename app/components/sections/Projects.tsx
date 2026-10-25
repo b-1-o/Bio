@@ -30,6 +30,7 @@ const projects: Project[] = [
     preview: 'music',
     device: 'phone',
     japanese: ['音楽', '静寂'],
+
   },
   {
     number: '02',
@@ -42,9 +43,10 @@ const projects: Project[] = [
     live: 'https://collab-docs-4tb.pages.dev/',
     preview: 'docs',
     device: 'laptop',
-    japanese: ['天界', '創造'],
-    japanese: ['未来', '仕事'],
     japanese: ['共同', '記録'],
+
+
+
   },
   {
     number: '03',
@@ -57,6 +59,7 @@ const projects: Project[] = [
     live: 'https://jobrain.vercel.app/',
     preview: 'jobbrain',
     device: 'laptop',
+    japanese: ['未来', '仕事'],
   },
   {
     number: '04',
@@ -69,6 +72,7 @@ const projects: Project[] = [
     live: 'https://heaven-b1o.vercel.app/',
     preview: 'heaven',
     device: 'laptop',
+    japanese: ['天界', '創造'],
   },
 ]
 
