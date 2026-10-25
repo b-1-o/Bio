@@ -116,16 +116,9 @@ export function Hero() {
 
   return (
     <section ref={heroRef} className="hero hero--3d" id="details" aria-labelledby="hero-title">
-      <div className="hero-grid" aria-hidden="true" />
-
-      <div className="hero__topline" data-hero-enter>
-        <span>ERIK GHABUZYAN / FRONTEND DEVELOPER</span>
-        <span>INDEPENDENT / ALWAYS BUILDING</span>
-      </div>
-
       <div className="hero__content">
         <p className="hero__kicker" data-hero-enter>
-          <span className="status-dot" /> INTERFACES <i>///</i> PERSONAL SOFTWARE
+          <span>静寂</span> <i>///</i> <span>創造</span>
         </p>
         <h1 id="hero-title" className="hero__title" aria-label="Developer + Geek">
           <SplitWord word="Developer" />
@@ -148,34 +141,31 @@ export function Hero() {
             View GitHub <ArrowIcon />
           </a>
         </div>
-        <p className="hero__manifesto" data-hero-enter>DESIGN / CODE / DETAIL</p>
+      </div>
+
+      <div className="hero__japanese" aria-hidden="true">
+        <span>異界</span>
+        <span>静寂から形へ</span>
+        <span>創造の余白</span>
       </div>
 
       <div
         ref={visualRef}
         className="hero__visual"
         role="img"
-        aria-label="An animated black and white liquid-metal sculpture"
+        aria-label="An animated flowing monochrome abstract form"
       >
-        <div className="hero__visual-halo" aria-hidden="true" />
         {!sceneReady ? (
           <div className="hero__blob-fallback" aria-hidden="true" />
         ) : (
           <Canvas
             className="hero__canvas"
-            dpr={[1, 1.6]}
-            camera={{ position: [0, 0, 9], fov: 42 }}
-            gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
+            dpr={[1, 1.2]}
+            gl={{ alpha: true, antialias: false, powerPreference: 'low-power' }}
           >
             <HeroBlob />
           </Canvas>
         )}
-        <span className="hero__object-label" aria-hidden="true"><i /> FORM / 001</span>
-      </div>
-
-      <div className="hero__index" data-hero-enter aria-hidden="true">
-        <span>FRONTEND / UI ENGINEERING</span>
-        <span>SCROLL TO EXPLORE ↓</span>
       </div>
     </section>
   )
