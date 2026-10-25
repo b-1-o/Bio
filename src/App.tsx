@@ -1,15 +1,16 @@
-import { useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import profilePortrait from '../assets/Gemini_Generated_Image_uf7b7uuf7b7uuf7b.jpeg'
 import { Cursor } from './components/Cursor'
 import Noise from './components/reactbits/Noise'
-import { PlayerUI } from './ui/PlayerUI'
 import { Sidebar } from '../app/components/Sidebar'
 import { Projects } from '../app/components/sections/Projects'
 import TerminalRain from '../app/components/ui/TerminalRain'
 import { Hero } from './components/Hero'
 import './App.css'
+
+const LazyPlayerUI = lazy(() => import('./ui/PlayerUI').then((module) => ({ default: module.PlayerUI })))
 
 function GitHubIcon() {
   return (
@@ -260,7 +261,11 @@ export default function App() {
         </footer>
       </div>
 
-      {isPlayerOpen && <PlayerUI onClose={() => setIsPlayerOpen(false)} />}
+      {isPlayerOpen && (
+        <Suspense fallback={null}>
+          <LazyPlayerUI onClose={() => setIsPlayerOpen(false)} />
+        </Suspense>
+      )}
     </main>
   )
 }

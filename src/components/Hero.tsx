@@ -35,6 +35,8 @@ export function Hero() {
   const heroRef = useRef<HTMLElement>(null)
   const visualRef = useRef<HTMLDivElement>(null)
   const [heroVisible, setHeroVisible] = useState(true)
+  const [socialsOpen, setSocialsOpen] = useState(false)
+  const plusRef = useRef<HTMLSpanElement>(null)
   const { scrollTo } = useSmoothScroll()
 
   useEffect(() => {
@@ -51,6 +53,26 @@ export function Hero() {
     observer.observe(hero)
     return () => observer.disconnect()
   }, [])
+
+  useEffect(() => {
+    if (!socialsOpen) return
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setSocialsOpen(false)
+    }
+    const closeOnOutsidePress = (event: PointerEvent) => {
+      if (event.target instanceof Node && !plusRef.current?.contains(event.target)) {
+        setSocialsOpen(false)
+      }
+    }
+
+    document.addEventListener('keydown', closeOnEscape)
+    document.addEventListener('pointerdown', closeOnOutsidePress)
+    return () => {
+      document.removeEventListener('keydown', closeOnEscape)
+      document.removeEventListener('pointerdown', closeOnOutsidePress)
+    }
+  }, [socialsOpen])
 
   useEffect(() => {
     const hero = heroRef.current
@@ -132,7 +154,37 @@ export function Hero() {
         </p>
         <h1 id="hero-title" className="hero__title" aria-label="Developer + Geek">
           <SplitWord word="Developer" />
-          <b className="hero__plus" data-hero-char aria-hidden="true">+</b>
+          <span className={'hero__plus-wrap' + (socialsOpen ? ' is-open' : '')} ref={plusRef}>
+            <button
+              className="hero__plus"
+              type="button"
+              data-hero-char
+              aria-label={socialsOpen ? 'Close social links' : 'Open social links'}
+              aria-expanded={socialsOpen}
+              aria-controls="hero-social-links"
+              onClick={() => setSocialsOpen((open) => !open)}
+            >
+              +
+            </button>
+            <span
+              className="hero__social-menu"
+              id="hero-social-links"
+              aria-hidden={!socialsOpen}
+            >
+              <a href="https://github.com/b-1-o" target="_blank" rel="noreferrer" tabIndex={socialsOpen ? 0 : -1} aria-label="GitHub">
+                <span className="hero__social-mark" aria-hidden="true">GH</span><span>GitHub</span>
+              </a>
+              <a href="https://www.linkedin.com/in/b1o" target="_blank" rel="noreferrer" tabIndex={socialsOpen ? 0 : -1} aria-label="LinkedIn">
+                <span className="hero__social-mark" aria-hidden="true">in</span><span>LinkedIn</span>
+              </a>
+              <a href="https://www.instagram.com/__._saint" target="_blank" rel="noreferrer" tabIndex={socialsOpen ? 0 : -1} aria-label="Instagram">
+                <span className="hero__social-mark" aria-hidden="true">◎</span><span>Instagram</span>
+              </a>
+              <a href="https://www.tiktok.com/@psycho_b1o" target="_blank" rel="noreferrer" tabIndex={socialsOpen ? 0 : -1} aria-label="TikTok">
+                <span className="hero__social-mark" aria-hidden="true">♪</span><span>TikTok</span>
+              </a>
+            </span>
+          </span>
           <SplitWord word="Geek" italic />
         </h1>
         <p className="hero__description" data-hero-enter>

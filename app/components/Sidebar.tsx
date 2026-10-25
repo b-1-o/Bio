@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react'
+
 type SidebarProps = { onPlayerOpen: () => void }
 
 function GitHubIcon() {
@@ -33,6 +35,52 @@ function InstagramIcon() {
 }
 
 export function Sidebar({ onPlayerOpen }: SidebarProps) {
+  const [activeSection, setActiveSection] = useState('details')
+
+  useEffect(() => {
+    let frame = 0
+    const sectionIds = ['details', 'projects', 'about']
+
+    const measureActiveSection = () => {
+      frame = 0
+      const readingLine = window.innerHeight * 0.42
+      let bestId = sectionIds[0]
+      let bestDistance = Number.POSITIVE_INFINITY
+
+      for (const id of sectionIds) {
+        const section = document.getElementById(id)
+        if (!section) continue
+        const rect = section.getBoundingClientRect()
+        const distance = readingLine < rect.top
+          ? rect.top - readingLine
+          : readingLine > rect.bottom
+            ? readingLine - rect.bottom
+            : 0
+
+        if (distance < bestDistance) {
+          bestDistance = distance
+          bestId = id
+        }
+        if (distance === 0) break
+      }
+
+      setActiveSection((current) => current === bestId ? current : bestId)
+    }
+
+    const scheduleMeasure = () => {
+      if (!frame) frame = window.requestAnimationFrame(measureActiveSection)
+    }
+
+    measureActiveSection()
+    window.addEventListener('scroll', scheduleMeasure, { passive: true })
+    window.addEventListener('resize', scheduleMeasure, { passive: true })
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame)
+      window.removeEventListener('scroll', scheduleMeasure)
+      window.removeEventListener('resize', scheduleMeasure)
+    }
+  }, [])
+
   return (
     <aside className="sidebar" aria-label="Main navigation">
       <a className="sidebar__brand" href="#top" aria-label="B-1-O home">
@@ -54,15 +102,15 @@ export function Sidebar({ onPlayerOpen }: SidebarProps) {
       </a>
 
       <nav className="sidebar__nav">
-        <a href="#details">
+        <a href="#details" aria-current={activeSection === 'details' ? 'location' : undefined}>
           <span className="sidebar__nav-number">01</span>
           <span>Details</span>
         </a>
-        <a href="#projects">
+        <a href="#projects" aria-current={activeSection === 'projects' ? 'location' : undefined}>
           <span className="sidebar__nav-number">02</span>
           <span>Projects</span>
         </a>
-        <a href="#about">
+        <a href="#about" aria-current={activeSection === 'about' ? 'location' : undefined}>
           <span className="sidebar__nav-number">03</span>
           <span>About</span>
         </a>
