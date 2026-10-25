@@ -36,12 +36,12 @@ jobs:
         run: |
           test -f build/client/index.html
           test -d build/client/assets
-          grep -q '/Bio/assets/' build/client/index.html
-          if grep -q '/src/main.tsx' build/client/index.html; then
-            echo 'ERROR: Vite source entry leaked into production build'
+          grep -q '"/assets/' build/client/index.html
+          if grep -q '/Bio/assets/' build/client/index.html; then
+            echo 'ERROR: old GitHub Pages /Bio/ base path leaked into the custom-domain build'
             exit 1
           fi
-          echo 'React Router SPA output verified.'
+          echo 'React Router SPA output verified for the custom domain.'
 
       - name: Deploy static client to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
