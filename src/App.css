@@ -2004,8 +2004,8 @@
   border-radius:inherit;
   content:"";
   background:
-    radial-gradient(ellipse at 4% 72%,#fff06 0,transparent 40%),
-    linear-gradient(116deg,#fff03 0%,transparent 42%,#fff04 100%);
+    radial-gradient(ellipse at 4% 72%,#ffffff06 0,transparent 40%),
+    linear-gradient(116deg,#ffffff03 0%,transparent 42%,#ffffff04 100%);
   pointer-events:none;
 }
 .hero__social-portal{
