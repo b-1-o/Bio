@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 type SidebarProps = { onPlayerOpen: () => void }
 
@@ -36,6 +36,7 @@ function InstagramIcon() {
 
 export function Sidebar({ onPlayerOpen }: SidebarProps) {
   const [activeSection, setActiveSection] = useState('details')
+  const activeSectionRef = useRef('details')
 
   useEffect(() => {
     let frame = 0
@@ -64,7 +65,10 @@ export function Sidebar({ onPlayerOpen }: SidebarProps) {
         if (distance === 0) break
       }
 
-      setActiveSection((current) => current === bestId ? current : bestId)
+      if (activeSectionRef.current !== bestId) {
+        activeSectionRef.current = bestId
+        setActiveSection(bestId)
+      }
     }
 
     const scheduleMeasure = () => {

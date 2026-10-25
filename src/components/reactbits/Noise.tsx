@@ -172,7 +172,7 @@ const Noise = ({
     let height = 1;
 
     const paintDust = (s: typeof settings, step: number) => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 1.25);
+      const dpr = Math.min(window.devicePixelRatio || 1, 1);
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       if (s.dust <= 0 && s.scratches <= 0 && scratchList.length === 0) return;
@@ -230,7 +230,7 @@ const Noise = ({
     };
 
     const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 1.25);
+      const dpr = Math.min(window.devicePixelRatio || 1, 1);
       width = Math.max(1, root.clientWidth);
       height = Math.max(1, root.clientHeight);
       canvas.width = Math.round(width * dpr);
