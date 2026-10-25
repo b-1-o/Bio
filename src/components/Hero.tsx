@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, type MouseEvent } from 'react'
-import { Canvas } from '@react-three/fiber'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useSmoothScroll } from './useSmoothScroll'
@@ -35,14 +34,11 @@ function SplitWord({ word, italic = false }: { word: string; italic?: boolean })
 export function Hero() {
   const heroRef = useRef<HTMLElement>(null)
   const visualRef = useRef<HTMLDivElement>(null)
-  const [sceneReady, setSceneReady] = useState(false)
-  const [heroVisible, setHeroVisible] = useState(false)
+  const [heroVisible, setHeroVisible] = useState(true)
   const { scrollTo } = useSmoothScroll()
 
   useEffect(() => {
     const hero = heroRef.current
-    setSceneReady(true)
-
     if (!hero || !('IntersectionObserver' in window)) {
       setHeroVisible(true)
       return
@@ -169,18 +165,8 @@ export function Hero() {
         role="img"
         aria-label="An animated flowing monochrome abstract form"
       >
-        {!sceneReady ? (
-          <div className="hero__blob-fallback" aria-hidden="true" />
-        ) : (
-          <Canvas
-            className="hero__canvas"
-            frameloop={heroVisible ? 'always' : 'demand'}
-            dpr={[1, 1.2]}
-            gl={{ alpha: true, antialias: false, powerPreference: 'low-power' }}
-          >
-            <HeroBlob />
-          </Canvas>
-        )}
+        <HeroBlob active={heroVisible} />
+        <div className="hero__blob-fallback" aria-hidden="true" />
       </div>
     </section>
   )

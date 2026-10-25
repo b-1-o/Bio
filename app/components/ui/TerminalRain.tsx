@@ -28,6 +28,8 @@ export default function TerminalRain({
     if (!ctx) return
 
     let raf = 0
+    let timeout = 0
+    let lastFrame = 0
     let width = 0
     let height = 0
     let columns = 0
@@ -37,7 +39,7 @@ export default function TerminalRain({
     const fontSize = 14
 
     const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 1.5)
+      const dpr = Math.min(window.devicePixelRatio || 1, 1)
       width = window.innerWidth
       height = window.innerHeight
       canvas.width = Math.floor(width * dpr)
@@ -50,8 +52,13 @@ export default function TerminalRain({
       speeds = Array.from({ length: columns }, () => 0.35 + Math.random() * 0.9)
     }
 
-    const draw = () => {
-      ctx.fillStyle = `rgba(5, 5, 5, 0.08)`
+    const draw = (now: number) => {
+      raf = 0
+      if (!pageVisible) return
+      const frameScale = lastFrame ? Math.min((now - lastFrame) / (1000 / 60), 2.5) : 1
+      lastFrame = now
+      const fade = 1 - Math.pow(1 - 0.08, frameScale)
+      ctx.fillStyle = 'rgba(5, 5, 5, ' + fade + ')'
       ctx.fillRect(0, 0, width, height)
       ctx.font = `${fontSize}px ui-monospace, SFMono-Regular, Menlo, monospace`
 
@@ -68,20 +75,30 @@ export default function TerminalRain({
         if (y > height && Math.random() > 0.975) {
           drops[i] = 0
         }
-        drops[i] += speeds[i]
+        drops[i] += speeds[i] * frameScale
       }
 
       ctx.globalAlpha = 1
-      if (pageVisible) raf = requestAnimationFrame(draw)
+      if (pageVisible) {
+        timeout = window.setTimeout(() => {
+          timeout = 0
+          if (pageVisible && !raf) raf = requestAnimationFrame(draw)
+        }, 1000 / 30)
+      }
+    }
+
+    const stop = () => {
+      if (raf) cancelAnimationFrame(raf)
+      if (timeout) window.clearTimeout(timeout)
+      raf = 0
+      timeout = 0
+      lastFrame = 0
     }
 
     const onVisibilityChange = () => {
       pageVisible = document.visibilityState !== 'hidden'
-      if (pageVisible && !raf) raf = requestAnimationFrame(draw)
-      if (!pageVisible && raf) {
-        cancelAnimationFrame(raf)
-        raf = 0
-      }
+      if (pageVisible && !raf && !timeout) raf = requestAnimationFrame(draw)
+      else if (!pageVisible) stop()
     }
 
     resize()
@@ -90,7 +107,7 @@ export default function TerminalRain({
     document.addEventListener('visibilitychange', onVisibilityChange)
 
     return () => {
-      cancelAnimationFrame(raf)
+      stop()
       window.removeEventListener('resize', resize)
       document.removeEventListener('visibilitychange', onVisibilityChange)
     }

@@ -1,16 +1,15 @@
-import { useMemo, useRef } from 'react'
-import { useFrame } from '@react-three/fiber'
-import * as THREE from 'three'
+import { useEffect, useRef } from 'react'
 
-const vertexShader = [
+const vertexShaderSource = [
+  'attribute vec2 position;',
   'varying vec2 vUv;',
   'void main() {',
-  '  vUv = uv;',
-  '  gl_Position = vec4(position.xy, 0.0, 1.0);',
+  '  vUv = position * 0.5 + 0.5;',
+  '  gl_Position = vec4(position, 0.0, 1.0);',
   '}',
 ].join('\n')
 
-const fragmentShader = [
+const fragmentShaderSource = [
   'precision highp float;',
   'uniform float uTime;',
   'uniform vec2 uResolution;',
@@ -83,41 +82,185 @@ const fragmentShader = [
   '}',
 ].join('\n')
 
-export function HeroBlob() {
-  const materialRef = useRef<THREE.ShaderMaterial>(null)
-  const elapsedRef = useRef(0)
-  const uniforms = useMemo(
-    () => ({
-      uTime: { value: 0 },
-      uResolution: { value: new THREE.Vector2(1, 1) },
-    }),
-    [],
-  )
+type HeroBlobProps = { active?: boolean }
 
-  useFrame((state, delta) => {
-    const material = materialRef.current
-    if (!material) return
+export function HeroBlob({ active = true }: HeroBlobProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const activeRef = useRef(active)
+  const startRef = useRef<(() => void) | null>(null)
+  const stopRef = useRef<(() => void) | null>(null)
+  activeRef.current = active
 
-    elapsedRef.current += delta
-    material.uniforms.uTime.value = elapsedRef.current
-    material.uniforms.uResolution.value.set(
-      Math.max(1, state.size.width),
-      Math.max(1, state.size.height),
-    )
-  })
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const gl = canvas.getContext('webgl', {
+      alpha: true,
+      antialias: false,
+      depth: false,
+      stencil: false,
+      premultipliedAlpha: true,
+      preserveDrawingBuffer: false,
+      powerPreference: 'high-performance',
+    })
+    if (!gl) {
+      canvas.classList.add('hero__canvas--unsupported')
+      return
+    }
 
-  return (
-    <mesh frustumCulled={false} renderOrder={1}>
-      <planeGeometry args={[2, 2]} />
-      <shaderMaterial
-        ref={materialRef}
-        uniforms={uniforms}
-        vertexShader={vertexShader}
-        fragmentShader={fragmentShader}
-        transparent
-        depthWrite={false}
-        toneMapped={false}
-      />
-    </mesh>
-  )
+    const compileShader = (type: number, source: string): WebGLShader | null => {
+      const shader = gl.createShader(type)
+      if (!shader) return null
+      gl.shaderSource(shader, source)
+      gl.compileShader(shader)
+      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        console.error('[HeroBlob] Shader compilation failed:', gl.getShaderInfoLog(shader))
+        gl.deleteShader(shader)
+        return null
+      }
+      return shader
+    }
+
+    const vertexShader = compileShader(gl.VERTEX_SHADER, vertexShaderSource)
+    const fragmentShader = compileShader(gl.FRAGMENT_SHADER, fragmentShaderSource)
+    if (!vertexShader || !fragmentShader) {
+      canvas.classList.add('hero__canvas--unsupported')
+      if (vertexShader) gl.deleteShader(vertexShader)
+      if (fragmentShader) gl.deleteShader(fragmentShader)
+      return
+    }
+
+    const program = gl.createProgram()
+    if (!program) {
+      canvas.classList.add('hero__canvas--unsupported')
+      gl.deleteShader(vertexShader)
+      gl.deleteShader(fragmentShader)
+      return
+    }
+
+    gl.attachShader(program, vertexShader)
+    gl.attachShader(program, fragmentShader)
+    gl.linkProgram(program)
+    gl.deleteShader(vertexShader)
+    gl.deleteShader(fragmentShader)
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      console.error('[HeroBlob] Program linking failed:', gl.getProgramInfoLog(program))
+      gl.deleteProgram(program)
+      canvas.classList.add('hero__canvas--unsupported')
+      return
+    }
+
+    const buffer = gl.createBuffer()
+    if (!buffer) {
+      gl.deleteProgram(program)
+      canvas.classList.add('hero__canvas--unsupported')
+      return
+    }
+
+    gl.useProgram(program)
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW)
+    const position = gl.getAttribLocation(program, 'position')
+    gl.enableVertexAttribArray(position)
+    gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0)
+
+    const timeLocation = gl.getUniformLocation(program, 'uTime')
+    const resolutionLocation = gl.getUniformLocation(program, 'uResolution')
+    gl.enable(gl.BLEND)
+    gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
+    gl.clearColor(0, 0, 0, 0)
+
+    let raf = 0
+    let timer = 0
+    let lastFrame = 0
+    let elapsed = 0
+    let disposed = false
+    const frameInterval = 1000 / (window.matchMedia('(max-width: 760px)').matches ? 30 : 40)
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    const paint = (time: number) => {
+      gl.viewport(0, 0, canvas.width, canvas.height)
+      gl.clear(gl.COLOR_BUFFER_BIT)
+      if (timeLocation) gl.uniform1f(timeLocation, time)
+      if (resolutionLocation) gl.uniform2f(resolutionLocation, canvas.width, canvas.height)
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+    }
+
+    const resize = () => {
+      const rect = canvas.getBoundingClientRect()
+      // Soft organic shapes retain their silhouette at a sub-1x buffer.
+      const maxDpr = window.matchMedia('(max-width: 760px)').matches ? 0.8 : 0.9
+      const dpr = Math.min(window.devicePixelRatio || 1, maxDpr)
+      const width = Math.max(1, Math.round(rect.width * dpr))
+      const height = Math.max(1, Math.round(rect.height * dpr))
+      if (canvas.width === width && canvas.height === height) return
+      canvas.width = width
+      canvas.height = height
+      paint(elapsed)
+    }
+
+    const draw = (now: number) => {
+      raf = 0
+      if (disposed || !activeRef.current || document.visibilityState === 'hidden') return
+      const delta = lastFrame ? Math.min((now - lastFrame) / 1000, 0.05) : 0
+      elapsed += delta
+      lastFrame = now
+      paint(elapsed)
+
+      timer = window.setTimeout(() => {
+        timer = 0
+        if (activeRef.current && !disposed && document.visibilityState !== 'hidden' && !raf) {
+          raf = window.requestAnimationFrame(draw)
+        }
+      }, frameInterval)
+    }
+
+    const start = () => {
+      if (disposed || reduceMotion || !activeRef.current || document.visibilityState === 'hidden' || raf || timer) return
+      raf = window.requestAnimationFrame(draw)
+    }
+    const stop = () => {
+      if (raf) window.cancelAnimationFrame(raf)
+      if (timer) window.clearTimeout(timer)
+      raf = 0
+      timer = 0
+      lastFrame = 0
+    }
+    const handleVisibility = () => {
+      if (document.visibilityState === 'hidden') stop()
+      else start()
+    }
+
+    startRef.current = start
+    stopRef.current = stop
+    const resizeObserver = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(resize) : null
+    if (resizeObserver) resizeObserver.observe(canvas.parentElement ?? canvas)
+    window.addEventListener('resize', resize)
+    document.addEventListener('visibilitychange', handleVisibility)
+    canvas.addEventListener('webglcontextlost', stop)
+
+    resize()
+    paint(elapsed)
+    start()
+
+    return () => {
+      disposed = true
+      stop()
+      startRef.current = null
+      stopRef.current = null
+      resizeObserver?.disconnect()
+      window.removeEventListener('resize', resize)
+      document.removeEventListener('visibilitychange', handleVisibility)
+      canvas.removeEventListener('webglcontextlost', stop)
+      gl.deleteBuffer(buffer)
+      gl.deleteProgram(program)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (active) startRef.current?.()
+    else stopRef.current?.()
+  }, [active])
+
+  return <canvas ref={canvasRef} className="hero__canvas" aria-hidden="true" />
 }

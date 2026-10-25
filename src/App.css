@@ -1793,3 +1793,40 @@
 @media(max-width:760px){
   .about-portrait__art::before{inset:3% -2.5% 2%;box-shadow:0 0 0 1px #ffffff1c,0 0 20px 1px #ffffff12,0 0 42px 6px #ffffff0a,0 18px 45px #ffffff08,inset 0 1px 0 #ffffff20}
 }
+
+
+/* Portrait lift: background-only diffuse white light; no border, rim, or outline. */
+.about-portrait__art::before{
+  inset:-5% -10% -5%!important;
+  border:0!important;
+  outline:0!important;
+  border-radius:0!important;
+  background:radial-gradient(ellipse at 50% 47%,#ffffff30 0%,#ffffff1c 30%,#ffffff0d 50%,#ffffff04 64%,transparent 80%)!important;
+  box-shadow:none!important;
+  filter:blur(32px);
+  transform:scale(1.04)!important;
+}
+.about-portrait__art::after{
+  inset:-4% -8% -3%!important;
+  border:0!important;
+  outline:0!important;
+  background:radial-gradient(ellipse at 50% 48%,#ffffff12 0%,#ffffff08 39%,#ffffff02 63%,transparent 75%)!important;
+  box-shadow:none!important;
+  filter:blur(25px);
+}
+.about-portrait__image{
+  filter:grayscale(100%) contrast(1.12) brightness(.84)!important;
+}
+.hero__canvas{
+  position:absolute!important;
+  inset:0!important;
+  z-index:0;
+  display:block;
+  width:100%!important;
+  height:100%!important;
+  background:transparent!important;
+  outline:none;
+}
+.hero__canvas--unsupported{display:none!important}
+.hero__canvas--unsupported + .hero__blob-fallback{opacity:1!important}
+.hero__blob-fallback{opacity:0;z-index:0;pointer-events:none}

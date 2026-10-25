@@ -163,7 +163,7 @@ const Noise = ({
     if (!root || !grain || !canvas || !ctx) return undefined;
     const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
     const scratchList: { x: number; age: number; life: number; weight: number; light: boolean; phase: number }[] = [];
-    let raf = 0;
+    let timer = 0;
     let last = 0;
     let roll = 0;
     let visible = true;
@@ -238,28 +238,31 @@ const Noise = ({
       paintDust(settingsRef.current, 0);
     };
 
-    const tick = (now: number) => {
-      raf = 0;
-      if (!alive) return;
+    const tick = () => {
+      timer = 0;
+      if (!alive || !visible) return;
       const s = settingsRef.current;
       const rate = reduce ? 0 : s.fps;
-      if (rate > 0 && now - last >= 1000 / rate) {
-        const step = last ? Math.min(0.2, (now - last) / 1000) : 1 / rate;
-        last = now;
-        const span = TILE * s.size;
-        grain.style.backgroundPosition = `${(Math.random() * span).toFixed(1)}px ${(Math.random() * span).toFixed(1)}px`;
-        grain.style.opacity = String(s.opacity * (1 - s.flicker * Math.random() * 0.7));
-        roll = (roll + 1) % 3;
-        linesRef.current?.style.setProperty('background-position', `0 ${roll}px`);
-        paintDust(s, step);
-      }
-      if (visible && rate > 0) raf = requestAnimationFrame(tick);
+      if (rate <= 0) return;
+
+      const now = performance.now();
+      const step = last ? Math.min(0.2, (now - last) / 1000) : 1 / rate;
+      last = now;
+      const span = TILE * s.size;
+      grain.style.backgroundPosition =
+        String((Math.random() * span).toFixed(1)) + 'px ' +
+        String((Math.random() * span).toFixed(1)) + 'px';
+      grain.style.opacity = String(s.opacity * (1 - s.flicker * Math.random() * 0.7));
+      roll = (roll + 1) % 3;
+      linesRef.current?.style.setProperty('background-position', '0 ' + roll + 'px');
+      paintDust(s, step);
+      if (alive && visible) timer = window.setTimeout(tick, 1000 / rate);
     };
 
     const wake = () => {
+      if (!alive || !visible || reduce || settingsRef.current.fps <= 0 || timer) return;
       paintDust(settingsRef.current, 0);
-      if (raf || !alive || !visible) return;
-      raf = requestAnimationFrame(tick);
+      tick();
     };
     wakeRef.current = wake;
 
@@ -268,6 +271,11 @@ const Noise = ({
     const visibility = new IntersectionObserver(entries => {
       visible = entries.some(entry => entry.isIntersecting);
       if (visible) wake();
+      else {
+        window.clearTimeout(timer);
+        timer = 0;
+        last = 0;
+      }
     });
     visibility.observe(root);
     resize();
@@ -275,7 +283,7 @@ const Noise = ({
 
     return () => {
       alive = false;
-      cancelAnimationFrame(raf);
+      window.clearTimeout(timer);
       wakeRef.current = null;
       resizeObserver.disconnect();
       visibility.disconnect();
