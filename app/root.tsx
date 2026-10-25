@@ -15,7 +15,7 @@ export function Layout({ children }: { children: ReactNode }) {
       <meta charSet="utf-8" />
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      <link rel="icon" type="image/svg+xml" href="/Bio/favicon.svg" />
+      <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
       <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
       <Meta />
       <Links />
