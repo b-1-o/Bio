@@ -33,6 +33,7 @@ export default function TerminalRain({
     let columns = 0
     let drops: number[] = []
     let speeds: number[] = []
+    let pageVisible = document.visibilityState !== 'hidden'
     const fontSize = 14
 
     const resize = () => {
@@ -71,16 +72,27 @@ export default function TerminalRain({
       }
 
       ctx.globalAlpha = 1
-      raf = requestAnimationFrame(draw)
+      if (pageVisible) raf = requestAnimationFrame(draw)
+    }
+
+    const onVisibilityChange = () => {
+      pageVisible = document.visibilityState !== 'hidden'
+      if (pageVisible && !raf) raf = requestAnimationFrame(draw)
+      if (!pageVisible && raf) {
+        cancelAnimationFrame(raf)
+        raf = 0
+      }
     }
 
     resize()
-    raf = requestAnimationFrame(draw)
+    if (pageVisible) raf = requestAnimationFrame(draw)
     window.addEventListener('resize', resize)
+    document.addEventListener('visibilitychange', onVisibilityChange)
 
     return () => {
       cancelAnimationFrame(raf)
       window.removeEventListener('resize', resize)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
     }
   }, [color, highlightColor])
 
