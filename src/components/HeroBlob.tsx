@@ -85,6 +85,7 @@ const fragmentShader = [
 
 export function HeroBlob() {
   const materialRef = useRef<THREE.ShaderMaterial>(null)
+  const elapsedRef = useRef(0)
   const uniforms = useMemo(
     () => ({
       uTime: { value: 0 },
@@ -93,11 +94,12 @@ export function HeroBlob() {
     [],
   )
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     const material = materialRef.current
     if (!material) return
 
-    material.uniforms.uTime.value = state.clock.elapsedTime
+    elapsedRef.current += delta
+    material.uniforms.uTime.value = elapsedRef.current
     material.uniforms.uResolution.value.set(
       Math.max(1, state.size.width),
       Math.max(1, state.size.height),
