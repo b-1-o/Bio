@@ -36,10 +36,24 @@ export function Hero() {
   const heroRef = useRef<HTMLElement>(null)
   const visualRef = useRef<HTMLDivElement>(null)
   const [sceneReady, setSceneReady] = useState(false)
+  const [heroVisible, setHeroVisible] = useState(false)
   const { scrollTo } = useSmoothScroll()
 
   useEffect(() => {
+    const hero = heroRef.current
     setSceneReady(true)
+
+    if (!hero || !('IntersectionObserver' in window)) {
+      setHeroVisible(true)
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setHeroVisible(entry.isIntersecting),
+      { rootMargin: '80px 0px' },
+    )
+    observer.observe(hero)
+    return () => observer.disconnect()
   }, [])
 
   useEffect(() => {
@@ -160,6 +174,7 @@ export function Hero() {
         ) : (
           <Canvas
             className="hero__canvas"
+            frameloop={heroVisible ? 'always' : 'demand'}
             dpr={[1, 1.2]}
             gl={{ alpha: true, antialias: false, powerPreference: 'low-power' }}
           >
